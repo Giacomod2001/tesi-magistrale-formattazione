@@ -147,35 +147,6 @@ def format_iulm_doc(testo):
     doc.add_page_break()
     doc.add_page_break()
 
-    # --- Sezione 2: Testo della Tesi ---
-    sect_tesi = doc.add_section(WD_SECTION_START.NEW_PAGE)
-    sect_tesi.top_margin = Cm(2.5)
-    sect_tesi.bottom_margin = Cm(2.5)
-    sect_tesi.left_margin = Cm(3.0)
-    sect_tesi.right_margin = Cm(3.0)
-    
-    # Sgancia il footer dal frontespizio
-    sect_tesi.footer.is_linked_to_previous = False
-    
-    # Reset numerazione pagina a 1
-    sectPr = sect_tesi._sectPr
-    pgNumType = OxmlElement('w:pgNumType')
-    pgNumType.set(qn('w:start'), "1")
-    sectPr.append(pgNumType)
-    
-    # Aggiungi il numero pagina a sinistra
-    footer = sect_tesi.footer
-    if len(footer.paragraphs) == 0:
-        p_footer = footer.add_paragraph()
-    else:
-        p_footer = footer.paragraphs[0]
-        
-    p_footer.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    run_footer = p_footer.add_run()
-    run_footer.font.name = 'Garamond'
-    run_footer.font.size = Pt(12)
-    add_page_number(run_footer)
-
     # --- Inserimento Indice (TOC) ---
     p_toc_title = doc.add_heading('', level=1)
     p_toc_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -192,8 +163,7 @@ def format_iulm_doc(testo):
     update_fields.set(qn('w:val'), 'true')
     settings.append(update_fields)
 
-    # first_chapter = False così anche l'Introduzione verrà forzata su una pagina dispari!
-    first_chapter = False
+    first_chapter = True
     in_bibliography = False
     
     lines = testo.split('\n')
@@ -254,7 +224,40 @@ def format_iulm_doc(testo):
             if title_text.lower() == 'bibliografia':
                 in_bibliography = True
                 
-            if not first_chapter:
+            if first_chapter:
+                # Se è il primo capitolo (es. Introduzione), creiamo la Sezione 2 
+                # che inizia da pagina ODD e fa partire il contatore da 1
+                new_section = doc.add_section(WD_SECTION_START.ODD_PAGE)
+                new_section.top_margin = Cm(2.5)
+                new_section.bottom_margin = Cm(2.5)
+                new_section.left_margin = Cm(3.0)
+                new_section.right_margin = Cm(3.0)
+                
+                # Sgancia il footer dall'indice/frontespizio
+                new_section.footer.is_linked_to_previous = False
+                
+                # Reset numerazione pagina a 1
+                sectPr = new_section._sectPr
+                pgNumType = OxmlElement('w:pgNumType')
+                pgNumType.set(qn('w:start'), "1")
+                sectPr.append(pgNumType)
+                
+                # Aggiungi il numero pagina a sinistra
+                footer = new_section.footer
+                if len(footer.paragraphs) == 0:
+                    p_footer = footer.add_paragraph()
+                else:
+                    p_footer = footer.paragraphs[0]
+                    
+                p_footer.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run_footer = p_footer.add_run()
+                run_footer.font.name = 'Garamond'
+                run_footer.font.size = Pt(12)
+                add_page_number(run_footer)
+                
+                first_chapter = False
+            else:
+                # Per i capitoli successivi
                 new_section = doc.add_section(WD_SECTION_START.ODD_PAGE)
                 new_section.top_margin = Cm(2.5)
                 new_section.bottom_margin = Cm(2.5)
@@ -262,7 +265,6 @@ def format_iulm_doc(testo):
                 new_section.right_margin = Cm(3.0)
                 
                 # Assicuriamoci che la numerazione continui e non si resetti a 1!
-                # Quando python-docx clona la sezione, copia anche il "start=1". Dobbiamo rimuoverlo.
                 sectPr = new_section._sectPr
                 pgNumType = sectPr.find(qn('w:pgNumType'))
                 if pgNumType is not None:
