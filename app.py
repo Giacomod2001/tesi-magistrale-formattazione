@@ -82,6 +82,30 @@ def add_page_number(run):
     run._r.append(fldChar3)
 
 
+def add_toc(paragraph):
+    """
+    Aggiunge un Indice (Table of Contents) aggiornabile in Word.
+    """
+    run = paragraph.add_run()
+    fldChar1 = OxmlElement('w:fldChar')
+    fldChar1.set(qn('w:fldCharType'), 'begin')
+
+    instrText = OxmlElement('w:instrText')
+    instrText.set(qn('xml:space'), 'preserve')
+    instrText.text = 'TOC \\o "1-3" \\h \\z \\u'
+
+    fldChar2 = OxmlElement('w:fldChar')
+    fldChar2.set(qn('w:fldCharType'), 'separate')
+
+    fldChar3 = OxmlElement('w:fldChar')
+    fldChar3.set(qn('w:fldCharType'), 'end')
+
+    run._r.append(fldChar1)
+    run._r.append(instrText)
+    run._r.append(fldChar2)
+    run._r.append(fldChar3)
+
+
 def format_iulm_doc(testo):
     doc = docx.Document()
 
@@ -152,7 +176,22 @@ def format_iulm_doc(testo):
     run_footer.font.size = Pt(12)
     add_page_number(run_footer)
 
-    first_chapter = True
+    # --- Inserimento Indice (TOC) ---
+    p_toc_title = doc.add_heading('', level=1)
+    p_toc_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run_toc = p_toc_title.add_run('Indice')
+    set_run_font(run_toc, 'Garamond', 20, bold=True, color_rgb=RGBColor(0, 0, 0))
+    force_heading_bold(p_toc_title)
+    
+    p_toc = doc.add_paragraph()
+    add_toc(p_toc)
+    
+    p_toc_inst = doc.add_paragraph()
+    run_inst = p_toc_inst.add_run(" (Dopo aver aperto il file Word, clicca col tasto destro in questo spazio vuoto e seleziona 'Aggiorna campo' per far apparire l'indice dei contenuti)")
+    set_run_font(run_inst, 'Garamond', 10, bold=False, color_rgb=RGBColor(128, 128, 128))
+
+    # first_chapter = False così anche l'Introduzione verrà forzata su una pagina dispari!
+    first_chapter = False
     in_bibliography = False
     
     lines = testo.split('\n')
