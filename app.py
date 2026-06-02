@@ -59,15 +59,39 @@ def parse_inline_markdown(p, text, base_font='Garamond', base_size=12):
             set_run_font(run, base_font, base_size)
 
 
+def add_page_number(run):
+    """
+    Aggiunge il campo dinamico PAGE (numero di pagina) nell'XML del run.
+    """
+    fldChar1 = OxmlElement('w:fldChar')
+    fldChar1.set(qn('w:fldCharType'), 'begin')
+
+    instrText = OxmlElement('w:instrText')
+    instrText.set(qn('xml:space'), 'preserve')
+    instrText.text = "PAGE"
+
+    fldChar2 = OxmlElement('w:fldChar')
+    fldChar2.set(qn('w:fldCharType'), 'separate')
+
+    fldChar3 = OxmlElement('w:fldChar')
+    fldChar3.set(qn('w:fldCharType'), 'end')
+
+    run._r.append(fldChar1)
+    run._r.append(instrText)
+    run._r.append(fldChar2)
+    run._r.append(fldChar3)
+
+
 def format_iulm_doc(testo):
     doc = docx.Document()
 
-    # Margini
-    for section in doc.sections:
-        section.top_margin = Cm(2.5)
-        section.bottom_margin = Cm(2.5)
-        section.left_margin = Cm(3.0)
-        section.right_margin = Cm(3.0)
+    # --- Sezione 1: Frontespizio ---
+    sect_frontespizio = doc.sections[0]
+    sect_frontespizio.top_margin = Cm(2.5)
+    sect_frontespizio.bottom_margin = Cm(2.5)
+    sect_frontespizio.left_margin = Cm(3.0)
+    sect_frontespizio.right_margin = Cm(3.0)
+    sect_frontespizio.footer.is_linked_to_previous = False
 
     # Stile Normal
     normal = doc.styles['Normal']
@@ -75,7 +99,7 @@ def format_iulm_doc(testo):
     normal.font.size = Pt(12)
     normal.paragraph_format.widow_control = True
 
-    # Stile Heading 1 — sovrascrittura completa
+    # Stile Heading 1
     h1 = doc.styles['Heading 1']
     h1.font.name = 'Garamond'
     h1.font.size = Pt(20)
@@ -85,7 +109,7 @@ def format_iulm_doc(testo):
     h1.paragraph_format.space_before = Pt(0)
     h1.paragraph_format.space_after = Pt(12)
 
-    # Stile Heading 2 — sovrascrittura completa
+    # Stile Heading 2
     h2 = doc.styles['Heading 2']
     h2.font.name = 'Garamond'
     h2.font.size = Pt(16)
@@ -95,9 +119,38 @@ def format_iulm_doc(testo):
     h2.paragraph_format.space_before = Pt(6)
     h2.paragraph_format.space_after = Pt(6)
 
-    # Due pagine vuote per il frontespizio
+    # Inserisce due pagine vuote nel frontespizio (senza numeri)
     doc.add_page_break()
     doc.add_page_break()
+
+    # --- Sezione 2: Testo della Tesi ---
+    sect_tesi = doc.add_section(WD_SECTION_START.NEW_PAGE)
+    sect_tesi.top_margin = Cm(2.5)
+    sect_tesi.bottom_margin = Cm(2.5)
+    sect_tesi.left_margin = Cm(3.0)
+    sect_tesi.right_margin = Cm(3.0)
+    
+    # Sgancia il footer dal frontespizio
+    sect_tesi.footer.is_linked_to_previous = False
+    
+    # Reset numerazione pagina a 1
+    sectPr = sect_tesi._sectPr
+    pgNumType = OxmlElement('w:pgNumType')
+    pgNumType.set(qn('w:start'), "1")
+    sectPr.append(pgNumType)
+    
+    # Aggiungi il numero pagina a sinistra
+    footer = sect_tesi.footer
+    if len(footer.paragraphs) == 0:
+        p_footer = footer.add_paragraph()
+    else:
+        p_footer = footer.paragraphs[0]
+        
+    p_footer.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    run_footer = p_footer.add_run()
+    run_footer.font.name = 'Garamond'
+    run_footer.font.size = Pt(12)
+    add_page_number(run_footer)
 
     first_chapter = True
     in_bibliography = False
