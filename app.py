@@ -174,6 +174,15 @@ def format_iulm_doc(testo):
             i += 1
             continue
 
+        # --- Sostituzioni Matematiche di Base ---
+        line = line.replace('$R^2$', 'R²')
+        line = line.replace('R^2', 'R²')
+        line = line.replace('beta', 'β')
+        line = line.replace('alpha', 'α')
+        line = line.replace('gamma', 'γ')
+        line = line.replace('epsilon', 'ε')
+        line = line.replace('lambda', 'λ')
+
         # --- Tabella Markdown ---
         if line.startswith('|') and '|' in line[1:]:
             table_lines = []
@@ -192,6 +201,14 @@ def format_iulm_doc(testo):
                 num_cols = len(valid_rows[0])
                 table = doc.add_table(rows=len(valid_rows), cols=num_cols)
                 table.style = 'Table Grid'
+                
+                # Forza l'autofit al 100% della pagina per non far tagliare la tabella
+                tblPr = table._tbl.tblPr
+                tblW = OxmlElement('w:tblW')
+                tblW.set(qn('w:type'), 'pct')
+                tblW.set(qn('w:w'), '5000') # 5000 = 100% in unità Word
+                tblPr.append(tblW)
+
                 for row_idx, row_data in enumerate(valid_rows):
                     for col_idx, cell_text in enumerate(row_data):
                         if col_idx < num_cols:
