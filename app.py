@@ -315,7 +315,7 @@ def format_iulm_doc(testo):
 # --- UI Streamlit ---
 st.set_page_config(page_title="IULM Thesis Formatter", layout="wide", initial_sidebar_state="expanded")
 
-st.title("🎓 IULM Thesis Formatter")
+st.title("IULM Thesis Formatter")
 st.markdown(
     "Un ambiente professionale per formattare la tua tesi. Incolla il testo in markdown, verifica la struttura nell'anteprima e genera il file Word perfetto."
 )
@@ -328,7 +328,7 @@ def update_text():
     st.session_state.testo_input = st.session_state.editor_area
 
 with st.sidebar:
-    st.header("📌 Struttura Tesi")
+    st.header("Struttura Tesi")
     if st.session_state.testo_input.strip():
         lines = st.session_state.testo_input.split('\n')
         h_counter = 0
@@ -338,17 +338,17 @@ with st.sidebar:
                 title = stripped[2:]
                 h_counter += 1
                 anchor = f"capitolo-{h_counter}"
-                st.markdown(f"**[{title}](#{anchor})**", unsafe_allow_html=True)
+                st.markdown(f"**<a href='#{anchor}' style='color: inherit; text-decoration: none;'>{title}</a>**", unsafe_allow_html=True)
             elif stripped.startswith('## '):
                 title = stripped[3:]
                 h_counter += 1
                 anchor = f"paragrafo-{h_counter}"
-                st.markdown(f"&nbsp;&nbsp;📄 [{title}](#{anchor})", unsafe_allow_html=True)
+                st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;<a href='#{anchor}' style='color: inherit; text-decoration: none;'>{title}</a>", unsafe_allow_html=True)
     else:
         st.info("Incolla il testo per generare l'indice navigabile.")
 
 # Layout a Tab per massimizzare l'area di lavoro
-tab1, tab2 = st.tabs(["📝 Editor Testuale", "👀 Anteprima di Lettura"])
+tab1, tab2 = st.tabs(["Editor Testuale", "Anteprima di Lettura"])
 
 with tab1:
     st.markdown("### Area di Inserimento")
@@ -362,13 +362,13 @@ with tab1:
     st.markdown("---")
     colA, colB = st.columns([1, 3])
     with colA:
-        if st.button("📄 Formatta e genera Word", type="primary", use_container_width=True):
+        if st.button("Formatta e genera Word", type="primary", use_container_width=True):
             if st.session_state.testo_input.strip():
                 with st.spinner("Generazione del documento Word in corso..."):
                     docx_file = format_iulm_doc(st.session_state.testo_input)
-                st.success("✨ Generazione completata!")
+                st.success("Generazione completata!")
                 st.download_button(
-                    label="⬇️ Scarica Tesi (.docx)",
+                    label="Scarica Tesi (.docx)",
                     data=docx_file,
                     file_name="Tesi_IULM_Formattata.docx",
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
