@@ -313,71 +313,94 @@ def format_iulm_doc(testo):
 
 
 # --- UI Streamlit ---
-st.set_page_config(page_title="IULM Thesis Formatter", layout="wide")
-st.title("IULM Thesis Formatter")
+st.set_page_config(page_title="IULM Thesis Formatter", layout="wide", initial_sidebar_state="expanded")
+
+st.title("🎓 IULM Thesis Formatter")
 st.markdown(
-    "Incolla il tuo testo in markdown. "
-    "Usa `# Capitolo` per i titoli di capitolo, `## Paragrafo` per i sottotitoli, "
-    "`**testo**` per il grassetto inline."
+    "Un ambiente professionale per formattare la tua tesi. Incolla il testo in markdown, verifica la struttura nell'anteprima e genera il file Word perfetto."
 )
 
-col1, col2 = st.columns([1, 1])
+# Parsing per Indice (mostrato nella Sidebar se c'è testo)
+if "testo_input" not in st.session_state:
+    st.session_state.testo_input = ""
 
-with col1:
-    testo_input = st.text_area("Incolla qui il tuo testo:", height=500)
+def update_text():
+    st.session_state.testo_input = st.session_state.editor_area
 
-    if st.button("Formatta e genera Word"):
-        if testo_input.strip():
-            with st.spinner("Generazione del documento in corso..."):
-                docx_file = format_iulm_doc(testo_input)
-            st.success("Documento generato con successo!")
-            st.download_button(
-                label="Scarica Tesi Formattata (.docx)",
-                data=docx_file,
-                file_name="Tesi_IULM_Formattata.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            )
-        else:
-            st.error("Inserisci del testo prima di generare il documento!")
-
-with col2:
-    st.markdown("### Preview del Testo Incollato")
-    if testo_input.strip():
-        # --- Generazione Indice e Ancore per la Preview ---
-        lines = testo_input.split('\n')
-        
-        # Inizializza il box dell'indice in HTML per un design più pulito
-        toc = ["<div style='background-color: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px;'>"]
-        toc.append("<h4 style='margin-top: 0;'>📌 Indice Rapido</h4>")
-        
-        out_lines = []
+with st.sidebar:
+    st.header("📌 Struttura Tesi")
+    if st.session_state.testo_input.strip():
+        lines = st.session_state.testo_input.split('\n')
         h_counter = 0
-        
         for line in lines:
             stripped = line.strip()
             if stripped.startswith('# '):
                 title = stripped[2:]
                 h_counter += 1
                 anchor = f"capitolo-{h_counter}"
-                # Aggiunge il link all'indice
-                toc.append(f"🔹 <a href='#{anchor}' style='text-decoration: none; color: #1f77b4;'><b>{title}</b></a><br>")
-                # Inietta l'ancora nel testo
-                out_lines.append(f"<a id='{anchor}'></a>\n\n# {title}")
+                st.markdown(f"**[{title}](#{anchor})**", unsafe_allow_html=True)
             elif stripped.startswith('## '):
                 title = stripped[3:]
                 h_counter += 1
                 anchor = f"paragrafo-{h_counter}"
-                # Aggiunge il link all'indice con indentazione
-                toc.append(f"&nbsp;&nbsp;&nbsp;&nbsp;🔸 <a href='#{anchor}' style='text-decoration: none; color: #ff7f0e;'>{title}</a><br>")
-                # Inietta l'ancora nel testo
-                out_lines.append(f"<a id='{anchor}'></a>\n\n## {title}")
-            else:
-                out_lines.append(line)
-                
-        toc.append("</div>")
-        
-        # Uniamo l'indice HTML con il markdown del testo
-        final_markdown = "".join(toc) + "\n\n" + "\n".join(out_lines)
-        st.markdown(final_markdown, unsafe_allow_html=True)
+                st.markdown(f"&nbsp;&nbsp;📄 [{title}](#{anchor})", unsafe_allow_html=True)
     else:
-        st.info("La preview apparirà qui non appena incollerai il testo a sinistra.")
+        st.info("Incolla il testo per generare l'indice navigabile.")
+
+# Layout a Tab per massimizzare l'area di lavoro
+tab1, tab2 = st.tabs(["📝 Editor Testuale", "👀 Anteprima di Lettura"])
+
+with tab1:
+    st.markdown("### Area di Inserimento")
+    st.text_area(
+        "Incolla qui il tuo testo in markdown (usa # per i Capitoli e ## per i Paragrafi):", 
+        height=600, 
+        key="editor_area", 
+        on_change=update_text
+    )
+
+    st.markdown("---")
+    colA, colB = st.columns([1, 3])
+    with colA:
+        if st.button("📄 Formatta e genera Word", type="primary", use_container_width=True):
+            if st.session_state.testo_input.strip():
+                with st.spinner("Generazione del documento Word in corso..."):
+                    docx_file = format_iulm_doc(st.session_state.testo_input)
+                st.success("✨ Generazione completata!")
+                st.download_button(
+                    label="⬇️ Scarica Tesi (.docx)",
+                    data=docx_file,
+                    file_name="Tesi_IULM_Formattata.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    use_container_width=True
+                )
+            else:
+                st.error("Inserisci del testo prima di generare!")
+
+with tab2:
+    st.markdown("### Preview Navigabile")
+    if st.session_state.testo_input.strip():
+        # Creiamo un container scrollabile per una lettura confortevole
+        with st.container(height=700):
+            lines = st.session_state.testo_input.split('\n')
+            out_lines = []
+            h_counter = 0
+            
+            for line in lines:
+                stripped = line.strip()
+                if stripped.startswith('# '):
+                    title = stripped[2:]
+                    h_counter += 1
+                    anchor = f"capitolo-{h_counter}"
+                    out_lines.append(f"<a id='{anchor}'></a>\n\n# {title}")
+                elif stripped.startswith('## '):
+                    title = stripped[3:]
+                    h_counter += 1
+                    anchor = f"paragrafo-{h_counter}"
+                    out_lines.append(f"<a id='{anchor}'></a>\n\n## {title}")
+                else:
+                    out_lines.append(line)
+            
+            st.markdown("\n".join(out_lines), unsafe_allow_html=True)
+    else:
+        st.info("L'anteprima apparirà qui non appena avrai incollato il testo nella tab Editor.")
