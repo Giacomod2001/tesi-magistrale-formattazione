@@ -7,6 +7,7 @@ files = [
     "capitolo1_introduzione.md",
     "capitolo2_contesto.md",
     "capitolo3_pilastri_teorici.md",
+    "capitolo4_esecuzione.md",
     "bibliografia.md"
 ]
 output_file = r"C:\Users\giaco\iulm_formatter\tesi_completa.txt"
