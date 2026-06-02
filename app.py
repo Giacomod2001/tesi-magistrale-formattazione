@@ -100,6 +100,8 @@ def format_iulm_doc(testo):
     doc.add_page_break()
 
     first_chapter = True
+    in_bibliography = False
+    
     lines = testo.split('\n')
     i = 0
 
@@ -154,6 +156,10 @@ def format_iulm_doc(testo):
         # --- Heading 1 (#) ---
         elif line.startswith('# '):
             title_text = line[2:]
+            
+            if title_text.lower() == 'bibliografia':
+                in_bibliography = True
+                
             if not first_chapter:
                 new_section = doc.add_section(WD_SECTION_START.ODD_PAGE)
                 new_section.top_margin = Cm(2.5)
@@ -174,7 +180,10 @@ def format_iulm_doc(testo):
             parse_inline_markdown(p, line)
             p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             p.paragraph_format.line_spacing = 1.5
-            p.paragraph_format.space_after = Pt(0)
+            if in_bibliography:
+                p.paragraph_format.space_after = Pt(12)
+            else:
+                p.paragraph_format.space_after = Pt(0)
 
         i += 1
 
