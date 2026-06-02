@@ -157,11 +157,9 @@ def format_iulm_doc(testo):
     p_toc = doc.add_paragraph()
     add_toc(p_toc)
 
-    # Forza Word ad aggiornare i campi (come l'Indice) automaticamente all'apertura del file
-    settings = doc.settings.element
-    update_fields = OxmlElement('w:updateFields')
-    update_fields.set(qn('w:val'), 'true')
-    settings.append(update_fields)
+    p_toc_inst = doc.add_paragraph()
+    run_inst = p_toc_inst.add_run(" (Dopo aver aperto il file Word, clicca col tasto destro in questo spazio vuoto e seleziona 'Aggiorna campo' -> 'Aggiorna intero sommario' per far apparire l'indice corretto. Devi farlo a mano altrimenti Word sbaglia i numeri!)")
+    set_run_font(run_inst, 'Garamond', 10, bold=False, color_rgb=RGBColor(128, 128, 128))
 
     first_chapter = True
     in_bibliography = False
