@@ -219,6 +219,14 @@ def format_iulm_doc(testo):
                 new_section.bottom_margin = Cm(2.5)
                 new_section.left_margin = Cm(3.0)
                 new_section.right_margin = Cm(3.0)
+                
+                # Assicuriamoci che la numerazione continui e non si resetti a 1!
+                # Quando python-docx clona la sezione, copia anche il "start=1". Dobbiamo rimuoverlo.
+                sectPr = new_section._sectPr
+                pgNumType = sectPr.find(qn('w:pgNumType'))
+                if pgNumType is not None:
+                    sectPr.remove(pgNumType)
+                    
             first_chapter = False
 
             p = doc.add_heading('', level=1)
