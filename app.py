@@ -45,20 +45,57 @@ def format_iulm_doc(testo):
 
     first_chapter = True
 
-    # Analizza il testo linea per linea
-    for line in testo.split('\n'):
-        line = line.strip()
+    lines = testo.split('\n')
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
         if not line:
+            i += 1
+            continue
+            
+        if line.startswith('|') and '|' in line[1:]:
+            # Gestione Tabella Markdown
+            table_lines = []
+            while i < len(lines) and lines[i].strip().startswith('|'):
+                table_lines.append(lines[i].strip())
+                i += 1
+            
+            valid_rows = []
+            for t_line in table_lines:
+                if '---' in t_line:
+                    continue
+                cells = [cell.strip() for cell in t_line.split('|')[1:-1]]
+                valid_rows.append(cells)
+                
+            if valid_rows:
+                num_cols = len(valid_rows[0])
+                table = doc.add_table(rows=len(valid_rows), cols=num_cols)
+                table.style = 'Table Grid'
+                for row_idx, row_data in enumerate(valid_rows):
+                    for col_idx, cell_text in enumerate(row_data):
+                        # Previeni IndexError se la riga ha meno colonne del previsto
+                        if col_idx < num_cols:
+                            cell = table.cell(row_idx, col_idx)
+                            cell.text = cell_text
+                            for p_cell in cell.paragraphs:
+                                for r in p_cell.runs:
+                                    r.font.name = 'Garamond'
+                                    r.font.size = Pt(11)
+                                    if row_idx == 0:
+                                        r.font.bold = True
             continue
             
         if line.startswith('## '):
             # Titolo 2 (sottocapitolo)
             p = doc.add_heading(line.replace('## ', ''), level=2)
             p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            for r in p.runs:
+                r.font.name = 'Garamond'
+                r.font.size = Pt(16)
+                r.font.bold = True
         elif line.startswith('# '):
             # Titolo 1 (Capitolo)
             if not first_chapter:
-                # Nuova sezione su pagina dispari per ogni nuovo capitolo
                 new_section = doc.add_section(WD_SECTION_START.ODD_PAGE)
                 new_section.top_margin = Cm(2.5)
                 new_section.bottom_margin = Cm(2.5)
@@ -68,12 +105,17 @@ def format_iulm_doc(testo):
             
             p = doc.add_heading(line.replace('# ', ''), level=1)
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            for r in p.runs:
+                r.font.name = 'Garamond'
+                r.font.size = Pt(20)
+                r.font.bold = True
         else:
             # Testo normale
             p = doc.add_paragraph(line)
-            # Giustificato e interlinea 1.5
             p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             p.paragraph_format.line_spacing = 1.5
+            
+        i += 1
             
     # Salva in un buffer di memoria
     buffer = io.BytesIO()
