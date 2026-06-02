@@ -343,6 +343,41 @@ with col1:
 with col2:
     st.markdown("### Preview del Testo Incollato")
     if testo_input.strip():
-        st.markdown(testo_input, unsafe_allow_html=True)
+        # --- Generazione Indice e Ancore per la Preview ---
+        lines = testo_input.split('\n')
+        
+        # Inizializza il box dell'indice in HTML per un design più pulito
+        toc = ["<div style='background-color: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px;'>"]
+        toc.append("<h4 style='margin-top: 0;'>📌 Indice Rapido</h4>")
+        
+        out_lines = []
+        h_counter = 0
+        
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith('# '):
+                title = stripped[2:]
+                h_counter += 1
+                anchor = f"capitolo-{h_counter}"
+                # Aggiunge il link all'indice
+                toc.append(f"🔹 <a href='#{anchor}' style='text-decoration: none; color: #1f77b4;'><b>{title}</b></a><br>")
+                # Inietta l'ancora nel testo
+                out_lines.append(f"<a id='{anchor}'></a>\n\n# {title}")
+            elif stripped.startswith('## '):
+                title = stripped[3:]
+                h_counter += 1
+                anchor = f"paragrafo-{h_counter}"
+                # Aggiunge il link all'indice con indentazione
+                toc.append(f"&nbsp;&nbsp;&nbsp;&nbsp;🔸 <a href='#{anchor}' style='text-decoration: none; color: #ff7f0e;'>{title}</a><br>")
+                # Inietta l'ancora nel testo
+                out_lines.append(f"<a id='{anchor}'></a>\n\n## {title}")
+            else:
+                out_lines.append(line)
+                
+        toc.append("</div>")
+        
+        # Uniamo l'indice HTML con il markdown del testo
+        final_markdown = "".join(toc) + "\n\n" + "\n".join(out_lines)
+        st.markdown(final_markdown, unsafe_allow_html=True)
     else:
         st.info("La preview apparirà qui non appena incollerai il testo a sinistra.")
