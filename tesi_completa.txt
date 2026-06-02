@@ -1,0 +1,500 @@
+Introduzione
+
+Ogni anno le imprese europee investono miliardi di euro in pubblicità digitale per presidiare mercati sempre più frammentati e competitivi. Secondo i dati dell'Interactive Advertising Bureau (IAB Europe, 2024), la spesa in digital advertising nell'area UE ha superato i 96 miliardi di euro nel 2023, confermando un tasso di crescita annuo composto prossimo all'11 % nell'ultimo quinquennio. Parallelamente, il settore delle agenzie per il lavoro destina al canale digitale una quota crescente del proprio budget promozionale, nella convinzione — spesso non verificata — che la visibilità online si traduca linearmente in candidature qualificate e, in ultima analisi, in ricavi.
+
+Eppure, nonostante l'entità degli investimenti, la domanda fondamentale rimane largamente inevasa: quale euro produce valore, e quale viene dissipato?
+
+La questione non è nuova. Già John Wanamaker — con la celebre sentenza attribuita anche a Lord Leverhulme — lamentava che «metà del denaro speso in pubblicità è sprecato; il problema è che non so quale metà». A distanza di oltre un secolo, l'ipertrofia dei canali digitali ha moltiplicato, anziché ridurre, la complessità del problema: i decision-maker operano oggi in un ecosistema caratterizzato da molteplicità di touchpoint, latenza variabile degli effetti pubblicitari, interazioni non lineari tra canali e asimmetrie informative strutturali tra piattaforme e inserzionisti.
+
+Il presente lavoro si colloca esattamente in questo snodo critico. L'obiettivo è duplice: da un lato, progettare e implementare una pipeline di Marketing Mix Modeling (MMM) calibrata sulle specificità del settore delle agenzie per il lavoro — un dominio finora trascurato dalla letteratura accademica — utilizzando il caso Randstad Italia come banco di prova; dall'altro, esplorare un paradigma decisionale che la tesi definisce human-in-the-middle, nel quale l'output algoritmico non sostituisce la discrezionalità del marketing manager, ma la informa, la struttura e, auspicabilmente, la migliora.
+
+La scelta del MMM come strumento analitico non è casuale. Nell'era della progressiva erosione dei meccanismi di tracciamento deterministico — dal declino dei cookie di terze parti all'introduzione dell'App Tracking Transparency di Apple — il Marketing Mix Modeling sta conoscendo una seconda giovinezza, candidandosi a divenire il perno di un nuovo paradigma di misurazione privacy-first (Chan & Perry, 2017; Jin et al., 2017). A differenza dei modelli di attribuzione multi-touch, che dipendono dal tracciamento a livello di utente, il MMM opera su dati aggregati — spesa pubblicitaria, impression, variabili contestuali — e non necessita di identificatori individuali, risultando così strutturalmente compatibile con i vincoli regolatori contemporanei.
+
+Il settore delle agenzie per il lavoro, e in particolare il caso Randstad Italia, offre un terreno di indagine particolarmente stimolante. La variabile obiettivo è multilivello — dall'impressione pubblicitaria alla candidatura, dal colloquio all'inserimento lavorativo — e il ciclo di conversione è lungo, variabile e soggetto a una ciclicità macroeconomica pronunciata. I canali di recruiting digitale — Indeed, LinkedIn, Google, Meta — operano con logiche di pricing, targeting e misurazione radicalmente diverse, rendendo la comparazione e l'ottimizzazione cross-canale una sfida tanto analitica quanto manageriale.
+
+La tesi propone infine un modello decisionale — il paradigma human-in-the-middle — nel quale il decisore non è relegato né al ruolo di validatore passivo dell'output algoritmico, né a quello di utilizzatore discrezionale che può ignorare le raccomandazioni a piacimento, ma opera come un nodo attivo all'interno di un sistema di feedback nel quale la sua conoscenza contestuale e il suo giudizio qualitativo informano, e sono a loro volta informati da, le evidenze quantitative del modello.
+
+
+Struttura del lavoro
+
+L'indagine si articola in tre parti.
+
+La Parte I — Il Problema (Capitoli 1–2) delimita il perimetro della ricerca. Il Capitolo 1 ricostruisce lo stato dell'arte del Marketing Mix Modeling, ne esamina l'evoluzione metodologica — dal declino dell'attribuzione deterministica all'ascesa dei framework open-source — e identifica le lacune bibliografiche che motivano l'indagine: l'assenza di applicazioni documentate nel settore HR e la limitata analisi dell'integrazione tra output algoritmico e discrezionalità del decisore. Il Capitolo 2 contestualizza il caso Randstad Italia, esaminando le dinamiche del mercato del lavoro italiano, i canali strategici del recruiting digitale e le criticità operative affrontate dai manager.
+
+La Parte II — La Soluzione (Capitoli 3–5) sviluppa l'architettura analitica. Il Capitolo 3 espone i pilastri teorici del MMM — adstock, saturazione, decomposizione, ottimizzazione — e giustifica l'adozione della metodologia alla luce delle sfide delineate. Il Capitolo 4 delinea il design del sistema: la pipeline analitica, le specifiche del dataset sintetico e i criteri di validazione. Il Capitolo 5 documenta l'implementazione e le evidenze modellistiche emerse, limitandosi alla restituzione dell'output tecnico.
+
+La Parte III — La Valutazione (Capitoli 6–7) interpreta i risultati e proietta lo sguardo oltre i confini della ricerca. Il Capitolo 6 traduce le curve di risposta in raccomandazioni di riallocazione, conduce l'analisi di scenario e confronta i risultati con le aspettative della letteratura, discutendo le implicazioni del passaggio da decisioni intuitive a decisioni data-driven. Il Capitolo 7 sintetizza il contributo originale, riprende il paradigma human-in-the-middle per esaminarne le prospettive evolutive e delinea la roadmap futura, focalizzata sulla validazione tramite dati reali, sul potenziamento dell'automazione e sullo sviluppo di una dashboard operativa.
+
+
+Nota sui dati. I dati utilizzati nella presente indagine sono sintetici, calibrati sulle distribuzioni reali di Randstad Italia. La scelta è motivata dai vincoli di compliance aziendale vigenti al momento della stesura. L'integrazione di dati reali aggregati sarà valutata in fase successiva, compatibilmente con le autorizzazioni necessarie.
+
+
+PARTE I — IL PROBLEMA
+
+
+Capitolo 1 — Stato dell'arte
+
+
+1.1 La crisi dell'attribuzione deterministica
+
+1.1.1 L'edificio fragile del tracciamento individuale
+
+Per oltre un ventennio, il digital advertising ha fondato la propria promessa di misurabilità su un'architettura tecnica che appariva — e si rivelava, con il senno di poi — strutturalmente fragile: il cookie di terze parti. Introdotto nel 1994 da Lou Montulli come meccanismo di gestione dello stato nelle sessioni HTTP, il cookie ha progressivamente assunto un ruolo che trascendeva la sua funzione originaria, divenendo il mattone fondamentale dell'intero ecosistema di ad tracking, retargeting e attribuzione deterministica (Mayer & Mitchell, 2012).
+
+Il modello funzionava, con approssimazione accettabile, in un mondo nel quale l'utente navigava prevalentemente da desktop, i walled garden delle piattaforme erano ancora permeabili e il consenso informato al tracciamento era un concetto giuridico più che un vincolo operativo. Questo mondo, tuttavia, ha cominciato a disgregarsi ben prima del colpo di grazia inferto dalla regolamentazione europea.
+
+1.1.2 Il trittico normativo-tecnologico
+
+La transizione verso un ecosistema privacy-first è il risultato della convergenza di tre forze distinte ma sinergiche.
+
+La pressione regolamentare. L'entrata in vigore del Regolamento Generale sulla Protezione dei Dati (GDPR, Regolamento UE 2016/679) il 25 maggio 2018 ha imposto il principio del consenso esplicito per il trattamento dei dati personali, compreso l'uso di cookie e identificatori a fini pubblicitari. In Italia, il Garante per la Protezione dei Dati Personali ha ulteriormente rafforzato il quadro con le Linee guida cookie e altri strumenti di tracciamento del giugno 2021. A livello globale, il California Consumer Privacy Act (CCPA, 2020) e il Digital Markets Act (DMA, Regolamento UE 2022/1925) hanno consolidato la tendenza verso una limitazione strutturale della raccolta dati a livello individuale. L'effetto aggregato è stato una riduzione significativa dei tassi di opt-in: secondo i dati di Usercentrics (2023), in Europa il tasso medio di consenso al tracciamento si attesta intorno al 45 %, con punte inferiori al 30 % in mercati come la Germania.
+
+Le restrizioni delle piattaforme. Apple ha introdotto l'Intelligent Tracking Prevention (ITP) su Safari nel giugno 2017, limitando progressivamente la persistenza dei cookie di terze parti fino a eliminarli del tutto nel marzo 2020. Firefox ha attivato l'Enhanced Tracking Protection (ETP) come impostazione predefinita nel settembre 2019 (Firefox 69), consolidando il blocco dei cookie di tracciamento sul terzo browser per quota di mercato globale. La mossa più dirompente è stata tuttavia l'App Tracking Transparency (ATT), lanciata da Apple con iOS 14.5 nell'aprile 2021, che ha imposto un opt-in esplicito per il tracciamento cross-app sull'intero ecosistema mobile Apple. I tassi di opt-in si sono attestati intorno al 25 % a livello globale (Flurry Analytics, 2022), con conseguenze devastanti sulla capacità delle piattaforme di advertising — Meta in primis, che ha stimato un impatto di circa 10 miliardi di dollari sui ricavi del 2022 — di attribuire conversioni con precisione deterministica.
+
+Il percorso di Google è stato più tortuoso. Nel gennaio 2020, l'azienda ha annunciato l'intenzione di deprecare i cookie di terze parti su Chrome entro due anni. Nel gennaio 2024, ha avviato un test limitato all'1 % degli utenti nell'ambito del framework Privacy Sandbox. Nel luglio 2024, tuttavia, Google ha annunciato un cambio di strategia, decidendo di non procedere alla deprecazione completa, mantenendo invece le impostazioni privacy esistenti — una decisione confermata nell'aprile 2025 con la rinuncia a un prompt di scelta per l'utente. Nonostante questo dietrofront, il trend strutturale è irreversibile: Safari e Firefox, che rappresentano complessivamente oltre il 30 % della quota di mercato browser globale, bloccano già i cookie di terze parti per impostazione predefinita, e il quadro normativo GDPR/CCPA rimane pienamente in vigore.
+
+L'obsolescenza tecnologica. Indipendentemente dalle scelte dei singoli attori, il modello stesso del tracciamento cross-site attraverso identificatori persistenti si è rivelato inadeguato all'evoluzione del panorama digitale. La frammentazione dei dispositivi (cross-device), la migrazione delle interazioni verso ambienti chiusi (in-app browsing, walled gardens) e la crescente sofisticazione degli strumenti di ad blocking — utilizzati da circa il 32 % degli utenti desktop in Europa secondo PageFair (2023) — hanno eroso progressivamente la copertura e l'affidabilità del tracciamento deterministico anche laddove il consenso era stato ottenuto.
+
+1.1.3 Le conseguenze per la misurazione
+
+L'effetto congiunto di queste tre forze ha prodotto un risultato paradossale: proprio mentre gli investimenti in digital advertising raggiungevano il loro massimo storico, la capacità di misurarne l'efficacia si è deteriorata in modo significativo. I modelli di attribuzione multi-touch (MTA) — che ricostruiscono il percorso di conversione assegnando un credito frazionario a ciascun touchpoint — soffrono di una dipendenza strutturale dal tracciamento a livello individuale e dalla capacità di collegare eventi cross-canale e cross-dispositivo (Li & Kannan, 2014; Berman, 2018).
+
+Come osservano Sapp e Galbrecht (2023), i modelli MTA presentano limitazioni che ne compromettono l'affidabilità anche in assenza dei vincoli privacy sopra descritti: la distorsione sistematica verso i canali posizionati a valle del funnel (il cosiddetto last-touch bias), l'incapacità di catturare effetti cross-canale e l'impossibilità di valutare l'impatto incrementale della spesa — ovvero la distinzione tra conversioni che si sarebbero verificate comunque (baseline) e quelle effettivamente generate dall'investimento pubblicitario.
+
+Il risultato è un vuoto metodologico che il mercato sta colmando con un ritorno — più maturo, più sofisticato, più computazionalmente intensivo — al Marketing Mix Modeling.
+
+
+1.2 Il Marketing Mix Modeling: genesi e rinascita
+
+1.2.1 Radici storiche
+
+Il Marketing Mix Modeling affonda le proprie radici nella tradizione econometrica degli anni Sessanta e Settanta. I lavori seminali di Bass (1969) sulla diffusione dei prodotti e di Little (1975) sui modelli di risposta pubblicitaria hanno posto le basi concettuali per la modellazione della relazione tra investimenti di marketing e risultati di business. L'intuizione fondamentale era semplice ma potente: se la spesa pubblicitaria varia nel tempo e nello spazio, è possibile — sotto determinate assunzioni — isolare statisticamente il suo effetto incrementale sulla variabile obiettivo (vendite, quote di mercato, conversioni) controllando per fattori confondenti.
+
+Il concetto di adstock — il termine che descrive l'effetto persistente della pubblicità oltre il periodo di esposizione — è stato formalizzato da Broadbent (1979), divenendo uno dei pilastri concettuali della disciplina. Negli anni Ottanta e Novanta, il MMM è diventato una pratica consolidata nelle grandi aziende di beni di largo consumo (CPG/FMCG), supportato dai dati scanner dei punti vendita e dall'expertise di società specializzate come Nielsen, IRI e Marketing Management Analytics (Tellis, 2006). La metodologia dominante era la regressione lineare multipla, arricchita da trasformazioni non lineari per catturare gli effetti di carry-over temporale e di saturazione.
+
+1.2.2 L'eclissi e la resurrezione
+
+L'avvento del digital advertising alla fine degli anni Novanta e l'affermazione dei modelli di attribuzione multi-touch negli anni Duemila hanno relegato il MMM a un ruolo ancillare. La promessa dell'attribuzione deterministica — poter tracciare ogni clic, ogni impressione, ogni conversione fino al singolo utente — appariva superiore all'approccio aggregato e retrospettivo del MMM, percepito come un residuo dell'era analogica.
+
+La rivalutazione del MMM, iniziata intorno al 2017–2018 con i contributi fondamentali di Jin et al. (2017) e Chan e Perry (2017) presso Google, e accelerata dalla crisi dell'attribuzione descritta nella sezione precedente, non è tuttavia un mero ritorno al passato. La nuova generazione di modelli si distingue dalla tradizione per almeno quattro dimensioni.
+
+In primo luogo, la sofisticazione metodologica: l'adozione di framework bayesiani consente di incorporare conoscenza pregressa (priors), quantificare l'incertezza nelle stime e produrre distribuzioni a posteriori anziché stime puntuali — un vantaggio decisivo in contesti decisionali dove la quantificazione del rischio è almeno altrettanto importante della stima del valore atteso (Chan & Perry, 2017).
+
+In secondo luogo, la democratizzazione tecnologica: il rilascio di framework open-source da parte dei principali attori della big tech — Meta (Robyn, 2021), Google (LightweightMMM, 2022; Meridian, 2025) — e della comunità scientifica (PyMC-Marketing, 2023) ha abbattuto le barriere all'adozione, rendendo il MMM accessibile anche a organizzazioni prive delle risorse per commissionare modelli proprietari a società di consulenza.
+
+In terzo luogo, la granularità e la frequenza: i nuovi framework operano nativamente su dati settimanali o giornalieri, anziché sulle aggregazioni trimestrali tipiche del MMM tradizionale, consentendo una maggiore reattività decisionale.
+
+Infine, l'integrazione con l'ottimizzazione: i modelli contemporanei non si limitano a stimare i coefficienti di risposta, ma incorporano moduli di ottimizzazione del budget che traducono le stime in raccomandazioni azionabili, soggette a vincoli operativi definiti dall'utente.
+
+
+1.3 Il panorama dei framework open-source
+
+La democratizzazione del MMM attraverso librerie open-source rappresenta uno dei fenomeni più significativi nell'evoluzione recente della disciplina. Questa sezione esamina i principali framework disponibili, analizzandone le caratteristiche metodologiche, i punti di forza e i limiti.
+
+1.3.1 Robyn (Meta)
+
+Robyn è un framework open-source sviluppato dal team Marketing Science di Meta (ex Facebook) e rilasciato pubblicamente nel novembre 2021 su GitHub sotto licenza MIT (Runge et al., 2024). Scritto in R, Robyn adotta un approccio frequentista basato sulla regressione ridge, con l'aggiunta di un ottimizzatore multiobiettivo (Nevergrad, sviluppato da Facebook AI Research) per la selezione dei modelli e l'allocazione del budget.
+
+Le caratteristiche distintive di Robyn includono la regressione ridge con regolarizzazione L2, che mitiga il rischio di overfitting in presenza di multicollinearità tra le variabili media — un problema endemico nel MMM, dove i canali tendono a covariare temporalmente. L'ottimizzazione multiobiettivo tramite Nevergrad esplora lo spazio dei parametri minimizzando simultaneamente l'errore di previsione (NRMSE, Normalized Root Mean Square Error) e l'errore di decomposizione (DECOMP.RSSD, Decomposition Root Sum of Squared Distance), producendo una frontiera di Pareto di modelli candidati. Il framework supporta trasformazioni di adstock geometriche e di Weibull, che offrono flessibilità nella modellazione del decadimento temporale dell'effetto pubblicitario, nonché la calibrazione opzionale con risultati di esperimenti incrementali (ad esempio, lift test o conversion lift study forniti dalle piattaforme), che consente di ancorare le stime del modello a evidenze causali. Un budget optimizer integrato calcola l'allocazione ottimale del budget tra canali dati i vincoli definiti dall'utente, mentre la scomposizione delle serie temporali è affidata alla libreria Prophet di Facebook per il trattamento di trend, stagionalità e festività.
+
+Robyn ha guadagnato una trazione significativa nella comunità dei professionisti del marketing, posizionandosi come lo strumento open-source più adottato per il MMM, particolarmente tra le aziende digital-native. Tuttavia, l'approccio frequentista presenta limitazioni intrinseche: l'incertezza è quantificabile solo tramite bootstrap, le stime sono puntuali anziché distribuzionali, la selezione tra i modelli della frontiera di Pareto richiede un intervento manuale e la conoscenza di dominio non può essere incorporata formalmente nel modello.
+
+1.3.2 Meridian (Google)
+
+Meridian è il framework open-source di nuova generazione sviluppato da Google, rilasciato il 29 gennaio 2025 dopo una fase di preview avviata nel marzo 2024 e un periodo di test con centinaia di brand (Google, 2025). Meridian succede a LightweightMMM (LMMM), anch'esso sviluppato da Google e rilasciato nel febbraio 2022, oggi deprecato. Meridian adotta un approccio bayesiano implementato in Python, con TensorFlow Probability come backend predefinito e un backend opzionale basato su JAX per prestazioni elevate.
+
+Le caratteristiche metodologiche di Meridian includono un modello gerarchico bayesiano, che consente la modellazione simultanea di dati a livello nazionale e subnazionale (geo-level), sfruttando la struttura gerarchica per migliorare la stabilità delle stime attraverso lo shrinkage bayesiano (partial pooling). Il framework incorpora prior informativi calibrati sulla conoscenza di dominio e, opzionalmente, su risultati sperimentali (ROI priors), che consentono di incorporare evidenze pre-esistenti nella stima dei parametri. La quantificazione nativa dell'incertezza, con intervalli credibili bayesiani per tutti i parametri stimati, rappresenta un vantaggio cruciale per la comunicazione dei risultati ai decisori. L'inferenza è condotta tramite MCMC (Markov Chain Monte Carlo), specificamente il campionatore NUTS (No-U-Turn Sampler; Hoffman & Gelman, 2014), che garantisce una esplorazione efficiente dello spazio a posteriori. Una caratteristica distintiva di Meridian è il reach and frequency modeling, che consente la modellazione dell'impatto pubblicitario in termini di copertura e frequenza di esposizione, anziché della sola spesa — un'innovazione significativa per catturare i rendimenti decrescenti a livello di audience. Il framework offre inoltre integrazione con dati Google (Query Volume, YouTube), facilitando l'incorporazione di segnali proprietari nell'analisi.
+
+Meridian rappresenta lo stato dell'arte nella modellazione bayesiana del marketing mix ed è il successore naturale del lavoro seminale di Jin et al. (2017), che ha formalizzato l'approccio bayesiano al MMM in ambito Google.
+
+1.3.3 PyMC-Marketing
+
+PyMC-Marketing è una libreria open-source sviluppata dalla comunità PyMC e da PyMC Labs, rilasciata nell'aprile 2023 (PyMC Labs, 2023). A differenza di Robyn e Meridian, PyMC-Marketing non è il prodotto di una singola big tech, ma di un ecosistema collaborativo di ricercatori e professionisti della modellazione bayesiana.
+
+Le caratteristiche principali includono un framework pienamente bayesiano, costruito sopra la libreria probabilistica PyMC (Salvatier et al., 2016), che offre un'interfaccia flessibile per la definizione di modelli personalizzati. La modularità e la personalizzazione consentono all'utente di specificare la struttura del modello (scelta della funzione di adstock, della curva di saturazione, delle distribuzioni a priori) con un grado di libertà superiore rispetto ai framework opinionated come Robyn e Meridian. L'integrazione con l'ecosistema PyMC include strumenti avanzati di diagnostica MCMC (ArviZ; Kumar et al., 2019), selezione dei modelli (LOO-CV, WAIC) e visualizzazione. Il supporto per modelli di Customer Lifetime Value (CLV), sia contrattuali sia non contrattuali, posiziona la libreria come uno strumento più ampio di marketing analytics bayesiano. L'approccio code-first trasparente offre controllo granulare su ogni componente del modello, incluse le verifiche predittive a priori (prior predictive checks) e a posteriori (posterior predictive checks).
+
+La flessibilità di PyMC-Marketing è al contempo il suo punto di forza e il suo limite: la maggiore libertà di modellazione richiede competenze tecniche più elevate e un investimento di tempo superiore nella specificazione e nella validazione del modello.
+
+1.3.4 Quadro sinottico
+
+Un confronto trasversale dei tre framework evidenzia convergenze e divergenze significative. Robyn, rilasciato nel 2021 in R, è l'unico ad adottare un paradigma frequentista (regressione ridge), affidando l'esplorazione dello spazio parametrico all'ottimizzatore multiobiettivo Nevergrad e producendo una frontiera di Pareto di modelli candidati; la quantificazione dell'incertezza è limitata a tecniche di bootstrap e la curva di apprendimento è moderata, il che ne ha favorito la diffusione tra i professionisti del marketing digitale. Meridian, rilasciato da Google nel gennaio 2025 (con preview nel marzo 2024), opera in Python su un modello gerarchico bayesiano con inferenza MCMC tramite il campionatore NUTS e backend TensorFlow Probability o JAX; si distingue per la modellazione nativa della reach e della frequenza, per il supporto gerarchico al geo-level modeling e per la quantificazione nativa dell'incertezza attraverso intervalli credibili. PyMC-Marketing, rilasciato nell'aprile 2023 dalla comunità PyMC, è anch'esso pienamente bayesiano e condivide con Meridian l'inferenza MCMC e la quantificazione nativa dell'incertezza, ma si differenzia per la maggiore flessibilità nella specificazione del modello e per l'inclusione di un modulo dedicato al Customer Lifetime Value; la curva di apprendimento è la più ripida dei tre. Tutti e tre i framework integrano un ottimizzatore del budget e supportano la calibrazione con risultati sperimentali, sebbene con meccanismi differenti: lift test in Robyn, ROI priors in Meridian, prior informativi personalizzabili in PyMC-Marketing.
+
+
+1.4 Frequentismo e bayesianesimo nel MMM: un confronto metodologico
+
+La scelta tra approccio frequentista e bayesiano non è meramente tecnica: essa incide sulla natura stessa delle risposte che il modello è in grado di fornire e, di conseguenza, sul tipo di supporto decisionale offerto al manager.
+
+1.4.1 L'approccio frequentista
+
+Nell'approccio frequentista, i parametri del modello sono trattati come quantità fisse (ma ignote) e le stime sono ottenute massimizzando la verosimiglianza dei dati osservati (o, nel caso della regressione ridge utilizzata da Robyn, minimizzando una funzione di costo penalizzata). L'incertezza è espressa attraverso intervalli di confidenza, che ammettono un'interpretazione rigorosamente procedurale: un intervallo di confidenza al 95 % significa che, se l'esperimento fosse ripetuto un numero infinito di volte, il 95 % degli intervalli costruiti con la stessa procedura conterrebbe il valore vero del parametro. Questa interpretazione, corretta ma controintuitiva, genera frequentemente fraintendimenti nella comunicazione ai decisori non tecnici (Morey et al., 2016).
+
+I principali vantaggi dell'approccio frequentista nel contesto del MMM sono la velocità computazionale — che consente di esplorare migliaia di configurazioni di modello in tempi contenuti —, la semplicità interpretativa delle stime puntuali, la minore dipendenza da assunzioni soggettive e la minore barriera all'ingresso in termini di competenze statistiche. I limiti includono l'impossibilità di incorporare formalmente la conoscenza pregressa, la sensibilità alla specificazione del modello e la già citata assenza di una quantificazione probabilistica nativa dell'incertezza parametrica.
+
+1.4.2 L'approccio bayesiano
+
+Nell'approccio bayesiano, i parametri sono trattati come variabili aleatorie dotate di una distribuzione di probabilità. L'inferenza procede aggiornando una distribuzione a priori (prior) — che codifica la conoscenza pregressa — alla luce dei dati osservati, per ottenere una distribuzione a posteriori (posterior) attraverso il teorema di Bayes. Formalmente, la distribuzione a posteriori P(θ|D) è proporzionale al prodotto della verosimiglianza P(D|θ) per la distribuzione a priori P(θ), normalizzato dalla probabilità marginale dei dati P(D), dove θ rappresenta il vettore dei parametri e D i dati osservati.
+
+Nel contesto del MMM, l'approccio bayesiano offre vantaggi significativi.
+
+In primo luogo, l'incorporazione della conoscenza di dominio: le distribuzioni a priori consentono di vincolare i parametri a regioni dello spazio parametrico coerenti con la conoscenza di dominio. Ad esempio, è ragionevole imporre che i coefficienti media siano non negativi (la spesa pubblicitaria non dovrebbe avere un effetto negativo sulle conversioni, in condizioni normali) o che il tasso di decadimento dell'adstock sia compreso in un intervallo plausibile per il canale considerato. Come osservano Chan e Perry (2017), l'uso di prior informativi è particolarmente prezioso nei dataset tipici del MMM, che contano di norma 100–200 osservazioni settimanali — un volume insufficiente per stimare con precisione un modello con decine di parametri senza regolarizzazione.
+
+In secondo luogo, la quantificazione probabilistica dell'incertezza: gli intervalli credibili bayesiani ammettono un'interpretazione diretta e intuitiva: un intervallo credibile al 95 % significa che, dato il modello e i dati osservati, il parametro ha una probabilità del 95 % di trovarsi nell'intervallo specificato. Questa interpretazione è immediatamente comprensibile per i decisori e consente una valutazione esplicita del rischio associato alle raccomandazioni di budget.
+
+In terzo luogo, la regolarizzazione implicita: le distribuzioni a priori agiscono come un meccanismo di regolarizzazione naturale, mitigando l'overfitting senza richiedere la selezione di iperparametri di penalizzazione.
+
+In quarto luogo, la propagazione dell'incertezza: l'incertezza parametrica si propaga automaticamente a tutte le quantità derivate (contributo dei media, curve di risposta, allocazione ottimale del budget), consentendo di esprimere le raccomandazioni come intervalli anziché come valori puntuali.
+
+Infine, la robustezza con dati limitati: in settori con serie storiche brevi o con elevata multicollinearità tra predittori — condizioni tipiche del MMM — i prior stabilizzano le stime e ne migliorano l'affidabilità attraverso il pooling gerarchico e la regolarizzazione implicita.
+
+I limiti dell'approccio bayesiano includono il costo computazionale dell'inferenza MCMC (mitigato dai progressi hardware e algoritmici degli ultimi anni), la necessità di competenze specialistiche nella specificazione delle distribuzioni a priori e nella diagnostica delle catene, e la potenziale soggettività nell'elicitazione dei prior — sebbene quest'ultima possa essere disciplinata attraverso analisi di sensibilità e verifiche predittive a priori.
+
+1.4.3 Implicazioni per la pratica
+
+La scelta tra i due approcci non è dicotomica. Robyn stesso incorpora elementi di regolarizzazione (la penalizzazione L2 della regressione ridge) che possono essere interpretati come un prior gaussiano implicito sui coefficienti. Analogamente, un modello bayesiano con prior non informativi (flat priors) converge, al limite, verso le stime di massima verosimiglianza.
+
+Nella pratica, la tendenza del mercato e della ricerca è nettamente orientata verso l'approccio bayesiano. Il rilascio di Meridian da parte di Google — che succede a LightweightMMM, anch'esso bayesiano — e lo sviluppo di PyMC-Marketing testimoniano un consenso crescente sull'adeguatezza dell'inferenza bayesiana per il MMM. Come argomentano Jin et al. (2017), i vantaggi dell'approccio bayesiano sono particolarmente marcati quando i dataset sono di dimensione limitata, la multicollinearità tra predittori è elevata e la comunicazione dell'incertezza ai decisori è un requisito operativo — condizioni che descrivono con precisione il contesto tipico del MMM nel marketing digitale. Numerosi professionisti raccomandano un percorso progressivo: iniziare con Robyn per ottenere indicazioni rapide, per poi migrare verso approcci bayesiani per le decisioni strategiche di medio-lungo termine.
+
+
+1.5 Finalità dell'indagine
+
+Il presente lavoro si propone di perseguire tre obiettivi interconnessi.
+
+Obiettivo 1 — Dimostrare l'applicabilità del MMM al settore delle agenzie per il lavoro. La letteratura sul Marketing Mix Modeling è largamente concentrata su settori a elevata intensità pubblicitaria — beni di largo consumo, retail, e-commerce, servizi finanziari — dove la variabile obiettivo (vendite, ricavi) è univoca e la relazione con gli investimenti media è consolidata. Il settore delle agenzie per il lavoro presenta peculiarità che rendono l'applicazione del MMM non triviale: la variabile obiettivo è multilivello (impression, clic, candidatura, colloquio, inserimento), il ciclo di conversione è lungo e variabile, la domanda è soggetta a una ciclicità macroeconomica pronunciata e i canali di recruiting (Indeed, LinkedIn, Google, Meta) presentano dinamiche di risposta eterogenee. La tesi intende verificare se, e in quale misura, il framework del MMM sia in grado di catturare queste specificità.
+
+Obiettivo 2 — Progettare e implementare una pipeline analitica end-to-end. L'indagine non si limita all'applicazione di un framework esistente, ma sviluppa un'architettura completa che include la preparazione dei dati, la modellazione, la validazione, la decomposizione dei contributi media e l'ottimizzazione del budget. La pipeline è progettata per essere riproducibile e trasferibile, con l'ambizione di costituire un punto di riferimento metodologico per applicazioni future nel medesimo settore.
+
+Obiettivo 3 — Esplorare il paradigma human-in-the-middle. La tesi propone e analizza un modello decisionale nel quale l'output algoritmico del MMM è integrato — ma non sostituisce — la discrezionalità del marketing manager. L'ipotesi sottostante è che la massimizzazione del valore dell'investimento pubblicitario richieda un'interazione strutturata tra la raccomandazione quantitativa del modello e la conoscenza contestuale, tacita e strategica del decisore umano: vincoli contrattuali con le piattaforme, obiettivi qualitativi non catturati dal modello, considerazioni di posizionamento competitivo, sensibilità politiche interne. Il paradigma human-in-the-middle postula che il valore del sistema risieda non nell'automazione della decisione, ma nella qualità dell'interfaccia tra dato e giudizio.
+
+
+1.6 Le lacune bibliografiche
+
+La revisione della letteratura ha evidenziato due lacune significative che il presente lavoro intende contribuire a colmare.
+
+1.6.1 L'assenza del settore HR
+
+Una ricerca sistematica condotta sulle principali basi dati accademiche — Scopus, Web of Science, Google Scholar — e sulle librerie digitali IEEE Xplore e ACM Digital Library, utilizzando combinazioni dei termini "marketing mix model" OR "media mix model" AND "recruitment" OR "staffing" OR "human resources" OR "job advertising" OR "talent acquisition", non ha restituito risultati pertinenti. Le applicazioni documentate del MMM si concentrano su settori nei quali la relazione tra investimento media e variabile obiettivo (vendite di prodotto, sottoscrizioni, download di app) è relativamente diretta e il ciclo di conversione è misurabile in giorni o settimane.
+
+Esiste una letteratura adiacente sul cosiddetto Employment Marketing Mix (EMM), che adatta il framework concettuale delle 4P/7P del marketing all'ambito della talent acquisition — dove il prodotto diventa l'esperienza lavorativa, il prezzo la remunerazione, la distribuzione i canali di reclutamento e la promozione l'employer branding. Questa letteratura, tuttavia, opera su un piano puramente concettuale e non propone modellazioni econometriche formali con meccanismi di adstock, saturazione e ottimizzazione del budget.
+
+Il settore delle agenzie per il lavoro presenta caratteristiche che lo rendono un candidato particolarmente interessante — e sfidante — per il MMM. La prima è il funnel di conversione lungo e a stadi multipli: la distanza tra l'impressione pubblicitaria e l'output economicamente rilevante (l'inserimento lavorativo del candidato presso l'azienda cliente) è mediata da una catena di conversioni intermedie, ciascuna con tassi di transizione variabili e latenza specifica. La seconda è la ciclicità macroeconomica: la domanda di lavoro interinale è fortemente correlata al ciclo economico, con componenti stagionali (picchi estivi nel manifatturiero e nella logistica) e strutturali (trend occupazionali di lungo periodo) che il modello deve separare dall'effetto della spesa media. La terza è l'eterogeneità dei canali: i canali di recruiting digitale (job board come Indeed, piattaforme professionali come LinkedIn, motori di ricerca come Google, social network come Meta) operano con logiche di pricing, targeting e misurazione radicalmente diverse, rendendo la comparazione e l'ottimizzazione cross-canale particolarmente complessa. La quarta è la dualità dell'audience: a differenza del marketing di prodotto, dove l'audience è unidimensionale (il consumatore), il marketing nel recruiting si rivolge simultaneamente a due audience — i candidati e le aziende clienti — con obiettivi, canali e metriche distinti.
+
+L'assenza di letteratura su questo dominio non implica che il MMM sia inapplicabile, ma segnala che la sua applicabilità non è stata verificata empiricamente. La presente tesi contribuisce a colmare questa lacuna.
+
+1.6.2 L'interfaccia uomo-modello
+
+Una seconda lacuna riguarda l'analisi dell'interazione tra l'output algoritmico del MMM e il processo decisionale del marketing manager. La letteratura tecnica sul MMM si concentra prevalentemente sulla qualità del modello — accuratezza predittiva, stabilità dei coefficienti, capacità di decomposizione — trattando la fase di traduzione delle stime in decisioni operative come un passaggio implicito e non problematico. Simmetricamente, la letteratura sul decision support e sulla human-AI interaction (Lai et al., 2021; Bansal et al., 2021) ha esplorato le dinamiche di fiducia, calibrazione e complementarità tra decisore umano e sistema algoritmico in numerosi contesti (medico, giuridico, finanziario), ma non ha indagato specificamente il caso del MMM.
+
+Va osservato che il paradigma bayesiano è, per sua natura, intrinsecamente human-in-the-loop: l'elicitazione dei prior costituisce una forma strutturata di incorporazione della conoscenza esperta nel modello. Il ciclo prevede l'estrazione della conoscenza del decisore (ad esempio: «Qual è il range di ROI atteso per LinkedIn?»), la sua traduzione in distribuzioni di probabilità, la verifica predittiva a priori, l'aggiornamento bayesiano alla luce dei dati, l'analisi di sensibilità e il raffinamento iterativo. Tuttavia, questa integrazione è limitata alla fase di specificazione del modello e non si estende alla fase di traduzione dei risultati in decisioni operative.
+
+Il presente lavoro contribuisce a colmare questa lacuna proponendo il concetto di human-in-the-middle — un modello nel quale il decisore opera come un nodo attivo all'interno di un sistema di feedback nel quale la sua conoscenza contestuale e il suo giudizio qualitativo informano, e sono a loro volta informati da, le evidenze quantitative del modello. A differenza del paradigma human-in-the-loop tradizionale — nel quale l'intervento umano è circoscritto a checkpoint di validazione sincroni — e del paradigma human-on-the-loop — nel quale il decisore supervisiona il sistema in modalità asincrona, intervenendo solo in caso di anomalie — il human-in-the-middle postula una co-determinazione continua nella quale la raccomandazione algoritmica e il giudizio manageriale si informano reciprocamente.
+
+
+1.7 Sintesi del capitolo
+
+Il presente capitolo ha delineato il contesto nel quale si inscrive l'indagine. La crisi dell'attribuzione deterministica — prodotta dalla convergenza di pressione regolamentare, restrizioni delle piattaforme e obsolescenza tecnologica — ha creato un vuoto metodologico che il Marketing Mix Modeling, nella sua incarnazione contemporanea, si candida a colmare. L'emergere di framework open-source (Robyn, Meridian, PyMC-Marketing) ha democratizzato l'accesso alla metodologia, mentre il dibattito tra approccio frequentista e bayesiano si sta risolvendo a favore di quest'ultimo, grazie alla sua capacità di incorporare la conoscenza di dominio, quantificare l'incertezza e comunicare i risultati in termini probabilistici.
+
+L'indagine si colloca all'intersezione di due lacune bibliografiche: l'assenza di applicazioni documentate del MMM nel settore delle agenzie per il lavoro e la limitata analisi dell'integrazione tra output algoritmico e discrezionalità del decisore. Il capitolo successivo contestualizzerà il caso Randstad Italia, esaminando le dinamiche del mercato del lavoro italiano e le specificità operative dei canali di recruiting digitale.
+
+
+Capitolo 2 — Il contesto
+
+2.1 Le specificità del marketing nel settore HR
+
+L'applicazione del Marketing Mix Modeling al settore delle agenzie per il lavoro richiede una comprensione preliminare delle dinamiche strutturali che governano il mercato del recruiting. A differenza del commercio al dettaglio o dei servizi digitali — settori in cui l'obiettivo primario del marketing è stimolare l'acquisto di un bene o servizio da parte del consumatore — il marketing delle risorse umane opera in un ecosistema intrinsecamente duale e bidirezionale.
+
+In primo luogo, si rileva la dualità dell'audience. Un'agenzia per il lavoro come Randstad opera simultaneamente su due mercati contigui ma distinti: il mercato B2B (Business-to-Business), finalizzato all'acquisizione di aziende clienti con esigenze di flessibilità del personale, e il mercato B2C (Business-to-Consumer), orientato all'attrazione, selezione e fidelizzazione dei candidati. Le campagne di digital advertising dirette ai candidati (talent acquisition) costituiscono il fulcro dell'investimento media e l'oggetto primario di questa indagine, poiché rappresentano la voce di spesa più variabile e complessa da ottimizzare. 
+
+In secondo luogo, il prodotto scambiato non è un bene inerte, ma l'impiego stesso, un'entità che coinvolge profondamente la sfera personale e professionale dell'individuo. Questo determina un funnel di conversione lungo e a stadi multipli. Mentre nell'e-commerce il percorso tra l'impressione pubblicitaria e l'acquisto può consumarsi in una singola sessione di navigazione, nel recruiting il funnel si articola in fasi sequenziali: visualizzazione dell'annuncio, clic, atterraggio sulla career page, compilazione del form di candidatura, pre-screening, colloquio conoscitivo, presentazione all'azienda cliente e, infine, assunzione. Ciascun passaggio presenta tassi di abbandono (drop-off) e latenze temporali che complicano enormemente il tracciamento deterministico.
+
+Infine, la domanda è caratterizzata da una marcata ciclicità macroeconomica. L'investimento pubblicitario per la ricerca di candidati è strettamente correlato ai picchi di produzione delle aziende clienti — si pensi ai picchi stagionali nella logistica durante il periodo natalizio o nell'agricoltura e turismo nei mesi estivi. Il modello econometrico deve pertanto essere in grado di depurare l'effetto incrementale della pubblicità dalle variazioni di baseline generate dal ciclo economico.
+
+
+2.2 Il caso Randstad Italia e l'architettura media
+
+Randstad Italia fa parte del gruppo multinazionale olandese Randstad N.V., leader mondiale nei servizi per le risorse umane. Sul territorio italiano, l'azienda si posiziona ai vertici del mercato per fatturato e capillarità della rete di filiali, offrendo servizi di somministrazione, ricerca e selezione, outplacement e formazione.
+
+L'architettura del digital marketing di un player enterprise come Randstad si inserisce in un media mix diversificato, progettato per intercettare target differenti attraverso piattaforme eterogenee. Per ovvie ragioni di riservatezza aziendale, non verranno qui divulgati gli esatti set-up tecnologici proprietari o i pesi specifici del budget allocato. Tuttavia, è essenziale mappare il "portafoglio delle opzioni" standard e avanzate a disposizione di un'agenzia per il lavoro contemporanea. L'analisi preliminare di questo ecosistema — dalle librerie inserzioni pubbliche (Meta Ad Library, Google Ads Transparency Center) fino allo studio delle architetture "sotto il cofano" tipiche del settore — è il prerequisito metodologico per istruire qualsiasi modello MMM.
+
+L'arsenale pubblicitario a disposizione di un inserzionista HR si articola solitamente sulle seguenti tipologie di campagne:
+
+A) Google Ads (Ecosistema Search e Network)
+Il motore di ricerca presidia la domanda esplicita. Le opzioni a disposizione includono:
+- Campagne Search e Dynamic Search Ads (DSA): per intercettare keyword transazionali (es. "offerte lavoro logistica"). Nei set-up avanzati, il keyword targeting manuale è sostituito da automazioni basate su piattaforme di Feed Management (come Channable), capaci di generare annunci dinamici agganciati al database delle posizioni aperte (Job Ads).
+- Campagne Performance Max (PMax) e Display: funzionali al retargeting e all'espansione della reach visiva per inseguire gli utenti nel loro percorso di navigazione post-clic.
+
+B) Meta Ads (Facebook e Instagram)
+Ecosistema primario per stimolare la domanda latente e gestire volumi elevati, specialmente per i profili blue-collar. Le opzioni tecniche spaziano da:
+- Campagne statiche (Lead Generation e Traffico): ben visibili nelle Ad Library pubbliche, sfruttano moduli nativi in-app per abbattere il Costo per Acquisizione (CPA).
+- Dynamic Ads (DPA e DABA): metodologie avanzate invisibili nelle librerie pubbliche. Le agenzie possono trattare il proprio database di annunci lavorativi come un "catalogo prodotti", lasciando che algoritmi come DPA (retargeting) o DABA (broad audiences) costruiscano l'inserzione in tempo reale per l'utente, basandosi su prossimità geografica e probabilità di conversione.
+
+C) LinkedIn Ads (La piattaforma professionale)
+Canale dal duplice ruolo (B2B e B2C), focalizzato su profili specialized e direttivi. Le opzioni includono:
+- Sponsored Content (Image, Video, Document): per l'employer branding e per dare risonanza istituzionale alle posizioni aperte.
+- Message Ads (ex Sponsored InMail): per contattare direttamente i passive candidates (professionisti non alla ricerca attiva) in casella di posta.
+- Lead Gen Forms: ideali sia per acquisire candidature altamente qualificate, sia per l'acquisizione di lead B2B (HR manager per servizi di somministrazione).
+
+D) Job Board e Aggregatori (Indeed, Jooble, Subito Lavoro, AlmaLaurea)
+Costituiscono il canale verticale, spesso operante in logica walled garden. L'investimento si concretizza in:
+- Annunci Sponsorizzati (PPC o Pay-Per-Application): per emergere nei risultati di ricerca organici del portale.
+- Display Advertising e DEM: acquisto di spazi premium (banner) o utilizzo dei database proprietari delle piattaforme (Direct Email Marketing) per promuovere servizi complessi e iniziative B2B.
+
+
+2.3 Le criticità operative: il limite del last-click
+
+La gestione quotidiana di questo media mix frammentato pone il marketing manager di fronte a criticità operative severe, che rendono indispensabile il passaggio a un approccio di Marketing Mix Modeling.
+
+La prima criticità è la frammentazione del tracciamento. Un candidato potrebbe visualizzare un'inserzione su Facebook (generando una view-through conversion non tracciata), cercare successivamente il brand su Google e infine candidarsi cliccando su un annuncio sponsorizzato su Indeed. I tradizionali modelli di attribuzione web-analytics tendono ad assegnare il cento per cento del merito all'ultimo clic (in questo caso Indeed), ignorando l'effetto di innesco e generazione della domanda svolto da Meta e Google.
+
+Questa cecità algoritmica porta a un sistematico sotto-finanziamento dei canali upper-funnel (social media, display) a favore dei canali lower-funnel (motori di ricerca, aggregatori), compromettendo nel medio-lungo termine la capacità di generare nuova audience.
+
+La seconda criticità riguarda l'incomparabilità delle metriche. Come può un marketing manager confrontare il Costo per Candidatura generato da una campagna Lead su Facebook con il Costo per Clic di un annuncio su LinkedIn o con l'abbonamento premium a una Job Board? I dati restituiti in silo dalle singole piattaforme (i cosiddetti walled gardens) tendono a sovrastimare il proprio contributo specifico, generando una somma delle conversioni attribuite spesso superiore al numero reale di candidature ricevute nei database aziendali.
+
+L'adozione di un modello MMM, calato sulla realtà di Randstad Italia, mira esattamente a risolvere questa impasse. Spostando il focus dal tracciamento del singolo utente all'analisi statistica dei dati aggregati, il modello promette di svelare l'impatto incrementale reale di ciascun euro speso nei diversi canali, fornendo al decisore umano una mappa navigabile per l'ottimizzazione del budget. Questo passaggio metodologico, dalle euristiche basate sull'ultimo clic alla modellazione probabilistica degli effetti media, costituisce l'oggetto del prossimo capitolo.
+
+
+PARTE II — LA SOLUZIONE
+
+
+Capitolo 3 — I pilastri teorici del Marketing Mix Modeling
+
+
+3.1 L'equazione generale del modello
+
+Il Capitolo 1 ha delineato il contesto metodologico nel quale il Marketing Mix Modeling si colloca: la crisi dell'attribuzione deterministica, l'emergere dei framework open-source e il dibattito tra approccio frequentista e bayesiano. Questa sezione traduce quei principi in un'architettura formale, esplicitando la struttura matematica che sottende ogni implementazione moderna del MMM.
+
+L'obiettivo di un modello di Marketing Mix è stimare la relazione causale tra gli investimenti media e una variabile obiettivo di business — nel caso di un'agenzia per il lavoro, tipicamente il numero di candidature settimanali ricevute. Il modello scompone la variabile obiettivo in una somma di componenti, ciascuna con un'interpretazione economica precisa.
+
+La formulazione generale può essere espressa come segue:
+
+y(t) = alpha + somma[k=1..K] di beta(k) * f(Adstock(x(k,t))) + somma[j=1..J] di gamma(j) * z(j,t) + epsilon(t)
+
+dove y(t) rappresenta il valore della variabile obiettivo al tempo t (ad esempio, il numero di candidature nella settimana t); alpha è l'intercetta, ovvero la baseline organica — il livello di candidature che l'azienda riceverebbe anche in assenza di qualsiasi investimento pubblicitario, per effetto della notorietà del brand, del traffico diretto e del passaparola; x(k,t) indica la spesa (o le impression) del canale media k al tempo t; la funzione Adstock() modella il carry-over temporale dell'effetto pubblicitario (trattato nella sezione 3.2); la funzione f() applica la trasformazione di saturazione che cattura i rendimenti decrescenti (trattata nella sezione 3.3); beta(k) è il coefficiente che misura l'effetto incrementale del canale k, dopo le trasformazioni di adstock e saturazione; z(j,t) rappresenta le variabili di controllo — stagionalità, trend, festività, indicatori macroeconomici come il tasso di disoccupazione o l'indice della produzione industriale — che influenzano la variabile obiettivo indipendentemente dalla spesa media; gamma(j) è il coefficiente associato a ciascuna variabile di controllo; epsilon(t) è il termine di errore, che cattura la variabilità non spiegata dal modello.
+
+L'ordine delle trasformazioni è cruciale e non intercambiabile: la spesa grezza viene prima trasformata in adstock (per tenere conto dell'effetto memoria), poi passata attraverso la funzione di saturazione (per modellare i rendimenti decrescenti). Solo a questo punto il valore trasformato viene moltiplicato per il coefficiente beta, che ne misura l'impatto sulla variabile obiettivo.
+
+È importante sottolineare che l'intercetta alpha riveste un ruolo analitico fondamentale nel contesto del settore HR. A differenza di un e-commerce puro, dove la baseline organica può essere trascurabile, un'agenzia per il lavoro come Randstad genera un flusso costante di candidature "spontanee" — candidati che conoscono il brand, che cercano direttamente il sito, che vengono segnalati dal passaparola o che si recano fisicamente in filiale. La corretta stima di questa baseline è il prerequisito per isolare l'effetto incrementale della pubblicità: se il modello sovrastima alpha, sottostima il contributo dei media, e viceversa.
+
+
+3.2 La trasformazione adstock: modelli di decadimento e carry-over
+
+Il concetto di adstock, formalizzato da Broadbent (1979) e introdotto nel Capitolo 1, si fonda su un'osservazione empirica fondamentale: l'effetto di un'esposizione pubblicitaria non si esaurisce nell'istante in cui avviene, ma persiste nel tempo con intensità decrescente. Un candidato che vede un'inserzione di lavoro su Facebook il lunedì non necessariamente si candida lo stesso giorno: potrebbe rifletterci, parlarne con un familiare, cercare informazioni sull'azienda e candidarsi il venerdì successivo. L'adstock è la funzione matematica che traduce questo comportamento in una variabile utilizzabile dal modello.
+
+3.2.1 Il decadimento geometrico
+
+La forma più semplice di adstock è il decadimento geometrico, nel quale l'effetto della spesa decresce esponenzialmente nel tempo secondo un tasso costante:
+
+A(t) = x(t) + lambda * A(t-1)
+
+dove A(t) è il valore di adstock al tempo t, x(t) è la spesa nel periodo corrente e lambda (compreso tra 0 e 1) è il tasso di ritenzione. Un lambda prossimo a 1 indica un effetto persistente (il ricordo della pubblicità decade lentamente), mentre un lambda prossimo a 0 indica un effetto effimero (la pubblicità agisce quasi esclusivamente nel periodo in cui viene erogata).
+
+Il modello geometrico ha il pregio della semplicità — un singolo parametro da stimare — ma presenta un limite strutturale: assume che il picco dell'effetto coincida sempre con il periodo di erogazione della spesa. Questa assunzione è ragionevole per i canali a risposta diretta (come Google Search, dove l'utente clicca e si candida quasi immediatamente), ma è inadeguata per i canali upper-funnel (come i social media o il display advertising), dove l'effetto massimo può manifestarsi con un ritardo di giorni o settimane rispetto all'esposizione.
+
+3.2.2 Il decadimento ritardato (delayed adstock)
+
+Per superare questa limitazione, i framework moderni (in particolare Meridian e PyMC-Marketing) implementano funzioni di adstock a due parametri che consentono di modellare sia la persistenza sia il ritardo dell'effetto. La distribuzione di Weibull, nella sua forma CDF (Cumulative Distribution Function) o PDF (Probability Density Function), è la scelta più comune.
+
+Nella parametrizzazione Weibull-PDF, l'effetto non raggiunge il picco al tempo zero, ma dopo un ritardo theta (il parametro di scala), e poi decade con una velocità controllata dal parametro di forma k. Questo consente di catturare dinamiche come la seguente: una campagna display su Meta genera awareness nella prima settimana, raggiunge il picco di effetto sulla candidature nella seconda settimana (quando il ricordo si traduce in azione) e decade progressivamente nelle settimane successive.
+
+La scelta tra decadimento geometrico e Weibull non è arbitraria, ma deve riflettere la conoscenza del comportamento del canale. Nel settore del recruiting, dove il ciclo decisionale del candidato è mediamente più lungo rispetto a un acquisto d'impulso, il delayed adstock è particolarmente appropriato per i canali di awareness (Meta, LinkedIn, Display), mentre il decadimento geometrico semplice può essere sufficiente per i canali a risposta diretta (Google Search, Job Board sponsorizzate).
+
+
+3.3 La funzione di saturazione: rendimenti decrescenti e funzione di Hill
+
+La seconda trasformazione fondamentale applicata alla spesa media è la funzione di saturazione, che modella un principio economico intuitivo: i rendimenti marginali della pubblicità sono decrescenti. I primi euro investiti su un canale generano un effetto proporzionalmente elevato, ma man mano che la spesa aumenta, ogni euro aggiuntivo produce un incremento sempre minore. Esiste un punto oltre il quale un aumento della spesa non produce alcun beneficio incrementale apprezzabile: il canale è "saturo".
+
+3.3.1 La funzione di Hill
+
+La funzione di Hill, originariamente sviluppata in biochimica per modellare la relazione dose-risposta tra la concentrazione di un ligando e la risposta biologica, è diventata lo standard nella modellazione della saturazione nel MMM contemporaneo. La sua forma è la seguente:
+
+f(x) = x^s / (K^s + x^s)
+
+dove x è il valore di adstock (la spesa trasformata), K è il parametro di half-saturation (il livello di spesa al quale si raggiunge il 50% dell'effetto massimo) e s è il parametro di slope (che controlla la ripidità della curva di saturazione).
+
+L'interpretazione dei parametri è diretta e operativamente rilevante. Il parametro K risponde alla domanda: "A quale livello di spesa settimanale questo canale raggiunge metà del suo potenziale massimo?". Un K basso indica un canale che satura rapidamente (pochi euro bastano per estrarre gran parte del valore), un K alto indica un canale con ampio margine di crescita. Il parametro s controlla la forma della curva: valori bassi producono una curva graduale (la saturazione avviene progressivamente), valori alti producono una curva ripida (il canale passa bruscamente da "sottosfruttato" a "saturo").
+
+3.3.2 Implicazioni per il settore HR
+
+Nel contesto del recruiting digitale, la funzione di saturazione ha implicazioni strategiche di primo piano. Canali diversi presentano curve di saturazione radicalmente diverse. Le Job Board (come Indeed), che operano su un bacino di utenti attivi nella ricerca di lavoro (audience finita), tendono a saturare rapidamente: oltre una certa soglia di sponsorizzazione, il numero di candidati raggiungibili è esaurito. I social media (Meta, LinkedIn), che operano su un bacino potenziale molto più ampio (audience latente), presentano tipicamente curve di saturazione più graduali, con margini di crescita superiori ma anche con una quota maggiore di impressioni "a vuoto" (utenti non interessati a cambiare lavoro).
+
+La stima accurata di queste curve — e delle differenze tra canali — è precisamente ciò che consente al modello MMM di formulare raccomandazioni di riallocazione del budget: spostare euro da un canale saturo (dove il rendimento marginale è prossimo allo zero) verso un canale sottosfruttato (dove il rendimento marginale è ancora elevato).
+
+
+3.4 La decomposizione dei contributi media
+
+Una volta stimati i parametri del modello — i coefficienti beta, i parametri di adstock e quelli di saturazione per ciascun canale — è possibile procedere alla decomposizione (media decomposition), ovvero alla scomposizione della variabile obiettivo nei contributi attribuibili a ciascuna fonte.
+
+Operativamente, la decomposizione calcola, per ogni periodo t, la quota di candidature attribuibile a ciascun canale media, alla baseline organica e alle variabili di controllo. Il contributo del canale k al tempo t è dato dal prodotto del coefficiente beta(k) per il valore trasformato (adstock + saturazione) della spesa del canale k in quel periodo.
+
+Dalla decomposizione si derivano le metriche di performance fondamentali per il decisore:
+
+Il contributo incrementale totale di ciascun canale, ottenuto sommando i contributi settimanali sull'intero periodo di osservazione. Questa metrica risponde alla domanda: "Quante candidature in più ha generato questo canale rispetto allo scenario zero-spesa?"
+
+Il ROI (Return on Investment) incrementale, calcolato come rapporto tra il contributo incrementale e la spesa totale sostenuta sul canale. Un ROI di 15 significa che ogni euro investito ha generato 15 candidature incrementali. Il confronto tra i ROI dei diversi canali rivela le inefficienze allocative: se Google ha un ROI di 20 e LinkedIn di 8, il modello suggerisce che un trasferimento marginale di budget da LinkedIn a Google genererebbe un incremento netto di candidature.
+
+Il ROAS marginale (Return on Ad Spend marginale), che a differenza del ROI medio, misura il rendimento dell'ultimo euro speso su ciascun canale. Questo è il dato operativamente più rilevante per l'ottimizzazione, poiché cattura la condizione attuale della curva di saturazione: un canale può avere un ROI medio elevato (perché storicamente ha funzionato bene) ma un ROAS marginale basso (perché è ormai saturo al livello di spesa corrente).
+
+È cruciale sottolineare che, in un framework bayesiano, queste metriche non sono stime puntuali ma distribuzioni di probabilità. Il ROI di Google non è "20", ma una distribuzione con mediana 20 e intervallo credibile al 90% compreso, ad esempio, tra 14 e 27. Questa quantificazione dell'incertezza è fondamentale per il processo decisionale: consente al marketing manager di valutare non solo il rendimento atteso, ma anche il rischio associato a ogni riallocazione.
+
+
+3.5 L'ottimizzatore di budget
+
+Il passaggio dalla decomposizione alla raccomandazione operativa avviene attraverso il modulo di ottimizzazione del budget, presente in tutti i principali framework (Robyn, Meridian, PyMC-Marketing). L'ottimizzatore risponde alla domanda operativa più urgente per il marketing manager: "Dato il mio budget totale, come dovrei distribuirlo tra i canali per massimizzare il numero di candidature?"
+
+3.5.1 Formulazione del problema
+
+Il problema è formulato come un'ottimizzazione vincolata. La funzione obiettivo è la massimizzazione delle candidature totali previste dal modello (o, equivalentemente, la massimizzazione del ROI complessivo del portafoglio media). I vincoli tipici includono:
+
+Il vincolo di budget totale: la somma della spesa allocata ai canali non può superare il budget disponibile.
+
+I vincoli di spesa minima e massima per canale: riflettono vincoli contrattuali (ad esempio, un impegno di spesa minimo con Indeed) o strategici (ad esempio, la volontà di mantenere una presenza minima su LinkedIn per ragioni di employer branding, anche se il ROI non lo giustificherebbe in termini puramente quantitativi).
+
+Vincoli di variazione rispetto allo status quo: per evitare riallocazioni traumatiche, è possibile imporre che la variazione di budget per ciascun canale non superi una percentuale massima rispetto all'allocazione corrente (ad esempio, più o meno 30%).
+
+3.5.2 Il meccanismo operativo
+
+L'ottimizzatore utilizza le curve di risposta stimate dal modello (la composizione di adstock e saturazione) per simulare l'effetto di infinite combinazioni di allocazione del budget, identificando quella che massimizza la funzione obiettivo sotto i vincoli specificati. In pratica, l'algoritmo "scivola" lungo le curve di saturazione di ciascun canale, sottraendo euro dai canali dove il rendimento marginale è basso (zona piatta della curva) e aggiungendoli ai canali dove il rendimento marginale è ancora elevato (zona ripida della curva).
+
+L'output dell'ottimizzatore è una tabella di riallocazione che specifica, per ciascun canale, la spesa corrente, la spesa ottimale suggerita, la variazione assoluta e percentuale, e l'incremento atteso di candidature. L'output include anche la stima dell'incremento totale di candidature ottenibile a parità di budget complessivo — il cosiddetto "budget efficiency gain".
+
+È essenziale comprendere che l'ottimizzatore produce una raccomandazione, non una decisione. La traduzione della raccomandazione in azione operativa è il compito del marketing manager, che deve valutare fattori non catturati dal modello: vincoli contrattuali in corso con le piattaforme, obiettivi qualitativi (come la diversificazione del profilo dei candidati), considerazioni di posizionamento competitivo e dinamiche di medio-lungo termine non riflesse nella serie storica. Questo passaggio introduce il tema della sezione conclusiva del capitolo.
+
+
+3.6 Il paradigma human-in-the-middle e gli strumenti di supporto alla ricerca
+
+3.6.1 Il decisore come nodo attivo
+
+Il Capitolo 1 ha introdotto il paradigma human-in-the-middle come un modello decisionale nel quale il manager non è né il validatore passivo di un output algoritmico, né il decisore autonomo che ignora le evidenze quantitative, ma il nodo attivo di un sistema di feedback bidirezionale. Le sezioni precedenti di questo capitolo hanno reso tangibile questo concetto: il decisore interviene nel ciclo del modello in almeno tre momenti distinti.
+
+In fase di specificazione, il marketing manager inietta la propria conoscenza di dominio nei prior bayesiani — ad esempio, dichiarando che il ROI atteso di Google Search è probabilmente compreso tra 10 e 25, sulla base dell'esperienza operativa accumulata. Questa informazione guida il modello verso stime coerenti con la realtà del settore, particolarmente preziosa quando i dati sono limitati o rumorosi.
+
+In fase di vincolo dell'ottimizzazione, il decisore traduce la conoscenza contestuale e strategica in parametri operativi — imponendo, ad esempio, un floor di spesa su LinkedIn perché l'employer branding verso i profili white-collar è un obiettivo aziendale non negoziabile, anche se il ROI puro non lo giustificherebbe.
+
+In fase di interpretazione e attuazione, il manager valuta criticamente la raccomandazione algoritmica alla luce di fattori che il modello non può catturare: un contratto quadro con Indeed in scadenza, una nuova campagna di brand awareness pianificata dal team comunicazione, una variazione imminente del mercato del lavoro in un settore specifico.
+
+Il paradigma human-in-the-middle postula che la qualita della decisione finale non sia funzione della sola accuratezza del modello, ne della sola esperienza del decisore, ma della qualita dell'interfaccia tra i due. Un modello perfetto con un decisore che ne ignora i risultati, o un decisore esperto privo di supporto quantitativo, producono entrambi esiti subottimali. Il valore del sistema risiede nella co-determinazione.
+
+3.6.2 Gli strumenti di intelligenza artificiale a supporto del processo di ricerca
+
+Il paradigma human-in-the-middle non si applica esclusivamente alla fase di ottimizzazione del budget pubblicitario, ma permea l'intero processo di indagine documentato in questo elaborato. È opportuno, per ragioni di trasparenza metodologica e di coerenza intellettuale con la tesi sostenuta, dichiarare che la presente ricerca si è avvalsa di strumenti di intelligenza artificiale generativa come copiloti analitici durante l'intero arco della stesura.
+
+In particolare, l'autore ha utilizzato Antigravity (Google DeepMind), un assistente di intelligenza artificiale agentico, come strumento di supporto nelle seguenti attivita: l'esplorazione sistematica delle librerie inserzioni pubbliche (Meta Ad Library, Google Ads Transparency Center, LinkedIn Ad Library) per la mappatura dell'ecosistema pubblicitario descritta nel Capitolo 2; la ricerca e il reperimento delle fonti bibliografiche; la strutturazione e la revisione formale dei contenuti; l'analisi critica delle architetture tecniche dei framework open-source (Robyn, Meridian, PyMC-Marketing).
+
+È fondamentale precisare la natura di questo utilizzo. Lo strumento di intelligenza artificiale ha operato come un amplificatore delle capacita analitiche dell'autore — accelerando la ricerca, sistematizzando le informazioni, suggerendo connessioni — ma non ha in alcun momento sostituito il giudizio critico, la responsabilita intellettuale e la direzione scientifica del lavoro, che restano integralmente in capo all'autore. Ogni affermazione, ogni interpretazione e ogni argomentazione presente in questo elaborato è stata valutata, validata e, dove necessario, corretta o riformulata dall'autore sulla base della propria conoscenza del dominio e della propria esperienza professionale nel settore.
+
+Questa dichiarazione non è un mero adempimento formale, ma un esempio concreto e vissuto del paradigma che la tesi stessa teorizza. Cosi come il marketing manager utilizza l'output del MMM come input qualificato per una decisione che resta umana, l'autore ha utilizzato l'output dell'intelligenza artificiale generativa come input qualificato per un processo di ricerca e scrittura che resta, nella sua essenza e nella sua responsabilita, un atto intellettuale umano. In entrambi i casi, il valore non risiede nell'automazione, ma nella qualita del dialogo tra la capacita computazionale della macchina e il giudizio critico della persona.
+
+
+3.7 Sintesi del capitolo
+
+Il presente capitolo ha formalizzato i pilastri teorici del Marketing Mix Modeling, traducendo i principi metodologici introdotti nel Capitolo 1 in un'architettura operativa. L'equazione generale del modello scompone la variabile obiettivo in baseline organica, contributi media trasformati e variabili di controllo. Le trasformazioni di adstock (decadimento geometrico o ritardato) e di saturazione (funzione di Hill) catturano rispettivamente la persistenza temporale e i rendimenti decrescenti dell'effetto pubblicitario. La decomposizione dei contributi e il calcolo del ROI incrementale forniscono la base analitica per l'ottimizzazione del budget, che produce raccomandazioni di riallocazione vincolate alle esigenze operative.
+
+Il capitolo si è chiuso con una riflessione sul paradigma human-in-the-middle, dimostrando che il decisore interviene attivamente in ogni fase del ciclo — dalla specificazione dei prior all'interpretazione dei risultati — e con una dichiarazione trasparente sull'utilizzo di strumenti di intelligenza artificiale generativa a supporto della ricerca, coerente con il medesimo paradigma.
+
+Il capitolo successivo tradurra questi principi in un design operativo: la scelta del framework, la specifica del dataset e i criteri di validazione del modello.
+
+
+# Bibliografia
+
+*Formato: APA 7th edition (Autore-Data)*
+
+---
+
+Bansal, G., Wu, T., Zhou, J., Fok, R., Nushi, B., Kamar, E., Ribeiro, M. T., & Weld, D. S. (2021). Does the whole exceed its parts? The effect of AI explanations on complementary team performance. In *Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems* (pp. 1–16). ACM. https://doi.org/10.1145/3411764.3445717
+
+
+
+Bass, F. M. (1969). A new product growth for model consumer durables. *Management Science*, *15*(5), 215–227. https://doi.org/10.1287/mnsc.15.5.215
+
+
+
+Berman, R. (2018). Beyond the last touch: Attribution in online advertising. *Marketing Science*, *37*(5), 771–792. https://doi.org/10.1287/mksc.2018.1104
+
+
+
+Broadbent, S. (1979). One at a time. *Journal of the Market Research Society*, *21*(1), 11–33.
+
+
+
+Chan, D., & Perry, M. (2017). *Challenges and opportunities in media mix modeling* (Technical Report). Google Research.
+
+
+
+Flurry Analytics. (2022). *iOS 14.5 opt-in rate: Weekly updates since launch*. Flurry Blog. https://www.flurry.com/blog/ios-14-5-opt-in-rate-att-app-tracking-transparency-weekly/
+
+
+
+Google. (2025, 29 gennaio). *Meridian: An open-source Marketing Mix Model*. Google AI Blog. https://blog.google/technology/ai/meridian-open-source-marketing-mix-model/
+
+
+
+Hoffman, M. D., & Gelman, A. (2014). The No-U-Turn Sampler: Adaptively setting path lengths in Hamiltonian Monte Carlo. *Journal of Machine Learning Research*, *15*(47), 1593–1623. https://jmlr.org/papers/v15/hoffman14a.html
+
+
+
+IAB Europe. (2024). *AdEx Benchmark 2023: European digital advertising market report*. IAB Europe.
+
+
+
+Jin, Y., Wang, Y., Sun, Y., Chan, D., & Koehler, J. (2017). *Bayesian methods for media mix modeling with carryover and shape effects* (Technical Report). Google Research.
+
+
+
+Kumar, R., Carroll, C., Hartikainen, A., & Martin, O. (2019). ArviZ: A unified library for exploratory analysis of Bayesian models in Python. *Journal of Open Source Software*, *4*(33), 1143. https://doi.org/10.21105/joss.01143
+
+
+
+Lai, V., Chen, C., Liao, Q. V., Smith-Renner, A., & Tan, C. (2021). Towards a science of human-AI decision making: A survey of empirical studies. *arXiv preprint*, arXiv:2112.11471. https://doi.org/10.48550/arXiv.2112.11471
+
+
+
+Li, H., & Kannan, P. K. (2014). Attributing conversions in a multichannel online marketing environment: An empirical model and a field experiment. *Journal of Marketing Research*, *51*(1), 40–56. https://doi.org/10.1509/jmr.13.0050
+
+
+
+Little, J. D. C. (1975). BRANDAID: A marketing-mix model, part 1: Structure. *Operations Research*, *23*(4), 628–655. https://doi.org/10.1287/opre.23.4.628
+
+
+
+Mayer, J. R., & Mitchell, J. C. (2012). Third-party web tracking: Policy and technology. In *2012 IEEE Symposium on Security and Privacy* (pp. 413–427). IEEE. https://doi.org/10.1109/SP.2012.47
+
+
+
+Morey, R. D., Hoekstra, R., Rouder, J. N., Lee, M. D., & Wagenmakers, E.-J. (2016). The fallacy of placing confidence in confidence intervals. *Psychonomic Bulletin & Review*, *23*(1), 103–123. https://doi.org/10.3758/s13423-015-0947-8
+
+
+
+PageFair. (2023). *Adblock report 2023: The state of the blocked web*. PageFair by Blockthrough.
+
+
+
+PyMC Labs. (2023). *PyMC-Marketing: Bayesian media mix models and customer lifetime value* (Versione 0.1.0) [Software]. GitHub. https://github.com/pymc-labs/pymc-marketing
+
+
+
+Regolamento (UE) 2016/679 del Parlamento europeo e del Consiglio, del 27 aprile 2016, relativo alla protezione delle persone fisiche con riguardo al trattamento dei dati personali. *Gazzetta ufficiale dell'Unione europea*, L 119, 1–88.
+
+
+
+Regolamento (UE) 2022/1925 del Parlamento europeo e del Consiglio, del 14 settembre 2022, relativo a mercati equi e contendibili nel settore digitale (Digital Markets Act). *Gazzetta ufficiale dell'Unione europea*, L 265, 1–66.
+
+
+
+Runge, J., Seljan, S., Li, X., Lo, K., Zhu, Z., Chow, Y., Stinnett, D., & Zhu, J. (2024). Packaging up media mix modeling: An introduction to Robyn's open-source approach. *arXiv preprint*, arXiv:2403.14674. https://doi.org/10.48550/arXiv.2403.14674
+
+
+
+Salvatier, J., Wiecki, T. V., & Fonnesbeck, C. (2016). Probabilistic programming in Python using PyMC3. *PeerJ Computer Science*, *2*, e55. https://doi.org/10.7717/peerj-cs.55
+
+
+
+Sapp, S., & Galbrecht, A. (2023). Media mix modeling and the limitations of multi-touch attribution. In *Proceedings of the AdKDD Workshop at ACM SIGKDD*. ACM.
+
+
+
+Tellis, G. J. (2006). Modeling marketing mix. In R. Grover & M. Vriens (A c. di), *The handbook of marketing research: Uses, misuses, and future advances* (pp. 506–522). Sage Publications. https://doi.org/10.4135/9781412973380.n24
+
+
+
+Usercentrics. (2023). *Consent rate benchmarks 2023: Insights from over 2 billion consent decisions*. Usercentrics.
+
+
