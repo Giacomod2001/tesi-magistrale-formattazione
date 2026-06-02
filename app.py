@@ -247,8 +247,8 @@ def format_iulm_doc(testo):
 
 
 # --- UI Streamlit ---
-st.set_page_config(page_title="IULM Thesis Formatter", page_icon="🎓", layout="wide")
-st.title("🎓 IULM Thesis Formatter")
+st.set_page_config(page_title="IULM Thesis Formatter", layout="wide")
+st.title("IULM Thesis Formatter")
 st.markdown(
     "Incolla il tuo testo in markdown. "
     "Usa `# Capitolo` per i titoli di capitolo, `## Paragrafo` per i sottotitoli, "
@@ -260,13 +260,13 @@ col1, col2 = st.columns([1, 1])
 with col1:
     testo_input = st.text_area("Incolla qui il tuo testo:", height=500)
 
-    if st.button("🪄 Formatta e genera Word"):
+    if st.button("Formatta e genera Word"):
         if testo_input.strip():
             with st.spinner("Generazione del documento in corso..."):
                 docx_file = format_iulm_doc(testo_input)
             st.success("Documento generato con successo!")
             st.download_button(
-                label="📥 Scarica Tesi Formattata (.docx)",
+                label="Scarica Tesi Formattata (.docx)",
                 data=docx_file,
                 file_name="Tesi_IULM_Formattata.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -275,7 +275,7 @@ with col1:
             st.error("Inserisci del testo prima di generare il documento!")
 
 with col2:
-    st.markdown("### 👀 Preview del Testo Incollato")
+    st.markdown("### Preview del Testo Incollato")
     if testo_input.strip():
         st.markdown(testo_input, unsafe_allow_html=True)
     else:
