@@ -11,15 +11,17 @@ import re
 
 def force_heading_bold(paragraph):
     """
-    Forza il bold a livello di pPr/rPr nell'XML del paragrafo,
+    Forza il bold a livello di rPr nell'XML dei run del paragrafo,
     necessario perché i temi di Word sovrascrivono altrimenti il run.
     """
-    pPr = paragraph._p.get_or_add_pPr()
-    rPr = pPr.get_or_add_rPr()
-    b = OxmlElement('w:b')
-    rPr.append(b)
-    b_cs = OxmlElement('w:bCs')
-    rPr.append(b_cs)
+    for run in paragraph.runs:
+        rPr = run._r.get_or_add_rPr()
+        if not rPr.xpath('w:b'):
+            b = OxmlElement('w:b')
+            rPr.append(b)
+        if not rPr.xpath('w:bCs'):
+            b_cs = OxmlElement('w:bCs')
+            rPr.append(b_cs)
 
 
 def set_run_font(run, name, size_pt, bold=False, color_rgb=None):
