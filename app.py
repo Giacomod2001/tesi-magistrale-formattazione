@@ -122,6 +122,7 @@ def format_iulm_doc(testo):
     normal.font.name = 'Garamond'
     normal.font.size = Pt(12)
     normal.paragraph_format.widow_control = True
+    normal.paragraph_format.keep_lines_together = True
 
     # Stile Heading 1
     h1 = doc.styles['Heading 1']
