@@ -106,26 +106,64 @@ def add_toc(paragraph):
     run._r.append(fldChar3)
 
 
-def format_iulm_doc(testo):
+def format_thesis_doc(testo, university):
     doc = docx.Document()
+    
+    # Imposta i parametri stilistici a seconda dell'università
+    if university == "IULM":
+        font_name = 'Garamond'
+        line_spacing = 1.5
+        margins = (3.0, 3.0, 3.0, 3.0)  # top, bottom, left, right in cm
+        empty_pages = 2
+        page_num_align = WD_ALIGN_PARAGRAPH.LEFT
+    elif university == "Bocconi":
+        font_name = 'Arial'
+        line_spacing = 1.15  # interlinea per contenere 26-30 righe per pagina
+        margins = (2.5, 2.5, 2.5, 2.5)
+        empty_pages = 4
+        page_num_align = WD_ALIGN_PARAGRAPH.RIGHT
+    elif university == "Cattolica":
+        font_name = 'Times New Roman'
+        line_spacing = 1.5
+        margins = (3.5, 2.5, 3.5, 2.5)  # asimmetria per rilegatura
+        empty_pages = 0
+        page_num_align = WD_ALIGN_PARAGRAPH.CENTER
+    elif university == "Politecnico di Milano":
+        font_name = 'Times New Roman'
+        line_spacing = 1.5
+        margins = (3.0, 3.0, 3.0, 2.5)
+        empty_pages = 0
+        page_num_align = WD_ALIGN_PARAGRAPH.CENTER
+    elif university == "Università di Pavia":
+        font_name = 'Times New Roman'
+        line_spacing = 1.5
+        margins = (3.0, 3.0, 3.0, 3.0)
+        empty_pages = 0
+        page_num_align = WD_ALIGN_PARAGRAPH.CENTER
+    else:  # Generale (Standard)
+        font_name = 'Times New Roman'
+        line_spacing = 1.5
+        margins = (3.0, 3.0, 3.5, 3.0)  # Margine sinistro di 3.5 per rilegatura
+        empty_pages = 0
+        page_num_align = WD_ALIGN_PARAGRAPH.CENTER
 
     # --- Sezione 1: Frontespizio ---
     sect_frontespizio = doc.sections[0]
-    sect_frontespizio.top_margin = Cm(2.5)
-    sect_frontespizio.bottom_margin = Cm(2.5)
-    sect_frontespizio.left_margin = Cm(3.0)
-    sect_frontespizio.right_margin = Cm(3.0)
+    sect_frontespizio.top_margin = Cm(margins[0])
+    sect_frontespizio.bottom_margin = Cm(margins[1])
+    sect_frontespizio.left_margin = Cm(margins[2])
+    sect_frontespizio.right_margin = Cm(margins[3])
     sect_frontespizio.footer.is_linked_to_previous = False
 
     # Stile Normal
     normal = doc.styles['Normal']
-    normal.font.name = 'Garamond'
+    normal.font.name = font_name
     normal.font.size = Pt(12)
     normal.paragraph_format.widow_control = True
 
     # Stile Heading 1
     h1 = doc.styles['Heading 1']
-    h1.font.name = 'Garamond'
+    h1.font.name = font_name
     h1.font.size = Pt(20)
     h1.font.bold = True
     h1.font.color.rgb = RGBColor(0, 0, 0)
@@ -135,7 +173,7 @@ def format_iulm_doc(testo):
 
     # Stile Heading 2
     h2 = doc.styles['Heading 2']
-    h2.font.name = 'Garamond'
+    h2.font.name = font_name
     h2.font.size = Pt(16)
     h2.font.bold = True
     h2.font.color.rgb = RGBColor(0, 0, 0)
@@ -143,15 +181,15 @@ def format_iulm_doc(testo):
     h2.paragraph_format.space_before = Pt(6)
     h2.paragraph_format.space_after = Pt(6)
 
-    # Inserisce due pagine vuote nel frontespizio (senza numeri)
-    doc.add_page_break()
-    doc.add_page_break()
+    # Inserisce pagine vuote se richiesto
+    for _ in range(empty_pages):
+        doc.add_page_break()
 
     # --- Inserimento Indice (TOC) ---
     p_toc_title = doc.add_heading('', level=1)
     p_toc_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run_toc = p_toc_title.add_run('Indice')
-    set_run_font(run_toc, 'Garamond', 20, bold=True, color_rgb=RGBColor(0, 0, 0))
+    set_run_font(run_toc, font_name, 20, bold=True, color_rgb=RGBColor(0, 0, 0))
     force_heading_bold(p_toc_title)
     
     p_toc = doc.add_paragraph()
@@ -159,7 +197,7 @@ def format_iulm_doc(testo):
 
     p_toc_inst = doc.add_paragraph()
     run_inst = p_toc_inst.add_run(" (Dopo aver aperto il file Word, clicca col tasto destro in questo spazio vuoto e seleziona 'Aggiorna campo' -> 'Aggiorna intero sommario' per far apparire l'indice corretto. Devi farlo a mano altrimenti Word sbaglia i numeri!)")
-    set_run_font(run_inst, 'Garamond', 10, bold=False, color_rgb=RGBColor(128, 128, 128))
+    set_run_font(run_inst, font_name, 10, bold=False, color_rgb=RGBColor(128, 128, 128))
 
     first_chapter = True
     in_bibliography = False
@@ -202,11 +240,11 @@ def format_iulm_doc(testo):
                 table = doc.add_table(rows=len(valid_rows), cols=num_cols)
                 table.style = 'Table Grid'
                 
-                # Forza l'autofit al 100% della pagina per non far tagliare la tabella
+                # Forza l'autofit al 100% della pagina
                 tblPr = table._tbl.tblPr
                 tblW = OxmlElement('w:tblW')
                 tblW.set(qn('w:type'), 'pct')
-                tblW.set(qn('w:w'), '5000') # 5000 = 100% in unità Word
+                tblW.set(qn('w:w'), '5000') # 5000 = 100%
                 tblPr.append(tblW)
 
                 for row_idx, row_data in enumerate(valid_rows):
@@ -217,7 +255,7 @@ def format_iulm_doc(testo):
                             cell.text = cell_clean
                             for para in cell.paragraphs:
                                 for run in para.runs:
-                                    run.font.name = 'Garamond'
+                                    run.font.name = font_name
                                     run.font.size = Pt(11)
                                     if row_idx == 0:
                                         run.font.bold = True
@@ -229,7 +267,7 @@ def format_iulm_doc(testo):
             p = doc.add_heading('', level=2)
             p.alignment = WD_ALIGN_PARAGRAPH.LEFT
             run = p.add_run(title_text)
-            set_run_font(run, 'Garamond', 16, bold=True, color_rgb=RGBColor(0, 0, 0))
+            set_run_font(run, font_name, 16, bold=True, color_rgb=RGBColor(0, 0, 0))
             force_heading_bold(p)
 
         # --- Heading 1 (#) ---
@@ -240,46 +278,44 @@ def format_iulm_doc(testo):
                 in_bibliography = True
                 
             if first_chapter:
-                # Se è il primo capitolo (es. Introduzione), creiamo la Sezione 2 
-                # che inizia da pagina ODD e fa partire il contatore da 1
+                # Se è il primo capitolo, creiamo la Sezione 2 con la formattazione dell'ateneo
                 new_section = doc.add_section(WD_SECTION_START.ODD_PAGE)
-                new_section.top_margin = Cm(2.5)
-                new_section.bottom_margin = Cm(2.5)
-                new_section.left_margin = Cm(3.0)
-                new_section.right_margin = Cm(3.0)
+                new_section.top_margin = Cm(margins[0])
+                new_section.bottom_margin = Cm(margins[1])
+                new_section.left_margin = Cm(margins[2])
+                new_section.right_margin = Cm(margins[3])
                 
-                # Sgancia il footer dall'indice/frontespizio
+                # Sgancia il footer
                 new_section.footer.is_linked_to_previous = False
                 
-                # Reset numerazione pagina a 1
+                # Reset numerazione a 1 (tranne Bocconi che vuole 4 pagine bianche e ha regole particolari)
                 sectPr = new_section._sectPr
                 pgNumType = OxmlElement('w:pgNumType')
                 pgNumType.set(qn('w:start'), "1")
                 sectPr.append(pgNumType)
                 
-                # Aggiungi il numero pagina a sinistra
+                # Aggiungi il numero pagina nel footer (se non è Bocconi che preferisce anonimato totale)
                 footer = new_section.footer
                 if len(footer.paragraphs) == 0:
                     p_footer = footer.add_paragraph()
                 else:
                     p_footer = footer.paragraphs[0]
                     
-                p_footer.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                p_footer.alignment = page_num_align
                 run_footer = p_footer.add_run()
-                run_footer.font.name = 'Garamond'
+                run_footer.font.name = font_name
                 run_footer.font.size = Pt(12)
                 add_page_number(run_footer)
                 
                 first_chapter = False
             else:
-                # Per i capitoli successivi
                 new_section = doc.add_section(WD_SECTION_START.ODD_PAGE)
-                new_section.top_margin = Cm(2.5)
-                new_section.bottom_margin = Cm(2.5)
-                new_section.left_margin = Cm(3.0)
-                new_section.right_margin = Cm(3.0)
+                new_section.top_margin = Cm(margins[0])
+                new_section.bottom_margin = Cm(margins[1])
+                new_section.left_margin = Cm(margins[2])
+                new_section.right_margin = Cm(margins[3])
                 
-                # Assicuriamoci che la numerazione continui e non si resetti a 1!
+                # Continua la numerazione
                 sectPr = new_section._sectPr
                 pgNumType = sectPr.find(qn('w:pgNumType'))
                 if pgNumType is not None:
@@ -290,15 +326,15 @@ def format_iulm_doc(testo):
             p = doc.add_heading('', level=1)
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run(title_text)
-            set_run_font(run, 'Garamond', 20, bold=True, color_rgb=RGBColor(0, 0, 0))
+            set_run_font(run, font_name, 20, bold=True, color_rgb=RGBColor(0, 0, 0))
             force_heading_bold(p)
 
         # --- Testo normale ---
         else:
             p = doc.add_paragraph()
-            parse_inline_markdown(p, line)
+            parse_inline_markdown(p, line, base_font=font_name)
             p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            p.paragraph_format.line_spacing = 1.5
+            p.paragraph_format.line_spacing = line_spacing
             if in_bibliography:
                 p.paragraph_format.space_after = Pt(12)
             else:
@@ -313,14 +349,14 @@ def format_iulm_doc(testo):
 
 
 # --- UI Streamlit ---
-st.set_page_config(page_title="IULM Thesis Formatter", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="FormatTesi.it — Multi-University Formatter", layout="wide", initial_sidebar_state="expanded")
 
-st.title("IULM Thesis Formatter")
+st.title("FormatTesi.it")
 st.markdown(
-    "Un ambiente professionale per formattare la tua tesi. Incolla il testo in markdown, verifica la struttura nell'anteprima e genera il file Word perfetto."
+    "Un ambiente professionale per formattare la tua tesi di laurea in conformità alle linee guida ufficiali degli atenei italiani."
 )
 
-# Parsing per Indice (mostrato nella Sidebar se c'è testo)
+# Parsing per Indice
 if "testo_input" not in st.session_state:
     st.session_state.testo_input = ""
 
@@ -328,6 +364,13 @@ def update_text():
     st.session_state.testo_input = st.session_state.editor_area
 
 with st.sidebar:
+    st.header("Opzioni Template")
+    univ_selected = st.selectbox(
+        "Seleziona il template dell'ateneo:",
+        ["Generale (Standard)", "IULM", "Bocconi", "Cattolica", "Politecnico di Milano", "Università di Pavia"]
+    )
+    
+    st.markdown("---")
     st.header("Struttura Tesi")
     if st.session_state.testo_input.strip():
         lines = st.session_state.testo_input.split('\n')
@@ -347,7 +390,7 @@ with st.sidebar:
     else:
         st.info("Incolla il testo per generare l'indice navigabile.")
 
-# Layout a Tab per massimizzare l'area di lavoro
+# Layout a Tab
 tab1, tab2 = st.tabs(["Editor Testuale", "Anteprima di Lettura"])
 
 with tab1:
@@ -365,12 +408,14 @@ with tab1:
         if st.button("Formatta e genera Word", type="primary", use_container_width=True):
             if st.session_state.testo_input.strip():
                 with st.spinner("Generazione del documento Word in corso..."):
-                    docx_file = format_iulm_doc(st.session_state.testo_input)
+                    docx_file = format_thesis_doc(st.session_state.testo_input, univ_selected)
                 st.success("Generazione completata!")
+                
+                clean_univ_name = univ_selected.replace(' ', '_').replace('(', '').replace(')', '')
                 st.download_button(
                     label="Scarica Tesi (.docx)",
                     data=docx_file,
-                    file_name="Tesi_IULM_Formattata.docx",
+                    file_name=f"Tesi_{clean_univ_name}_Formattata.docx",
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     use_container_width=True
                 )
@@ -380,7 +425,6 @@ with tab1:
 with tab2:
     st.markdown("### Preview Navigabile")
     if st.session_state.testo_input.strip():
-        # Creiamo un container scrollabile per una lettura confortevole
         with st.container(height=700):
             lines = st.session_state.testo_input.split('\n')
             out_lines = []
